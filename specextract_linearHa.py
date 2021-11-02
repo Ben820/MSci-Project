@@ -4,6 +4,15 @@ Created on Tue Oct  5 13:31:08 2021
 
 @author: rr3
 
+Directories: 
+    C:\Local\Akshay Laptop Backup 29Dec2019\Imperial\MSci Project\DESI\DESI_DxH\DESI_DxH
+    
+Method: 
+    Part 1 - Loads data
+    Part 2 - Curvefits the remaining continuum to get smooth continuum function
+    Part 3 - Divides the original data spectrum by continuum function; returns normalised spectra
+    Part 4 - Fit Voigt profiles to absorption features in normalised spectra 
+    
 """
 
 

@@ -152,10 +152,11 @@ plt.figure()
 plt.plot(xp_triplet, yp_triplet,'x')
 plt.show()    
 #%% VOIGT TRIPLET
+""" Initial Voigt Triplet Fitting attempt; VoigtNew """
 #plt.plot(x, y, color = "red", label = "Corrected Hg \n doublet")
-p0Vt1 = np.array([1.5, 6530, 2.6, 1.85032])
-p0Vt2= np.array([2.5, 6565, 2.6, 1.85032])
-p0Vt3= np.array([1.5, 6600, 2.6, 1.85032])
+#p0Vt1 = np.array([1.5, 6530, 2.6, 1.85032])
+#p0Vt2= np.array([2.5, 6565, 2.6, 1.85032])
+#p0Vt3= np.array([1.5, 6600, 2.6, 1.85032])
 #pylab.plot(xg, G(xg, alpha), ls=':', label='Gaussian')
 #pylab.plot(xg, L(xg, gamma), ls='--', label='Lorentzian')
 #lm.models.voigt()
@@ -163,24 +164,26 @@ def VoigtNew(x, A1, centre1, sigma1, gamma1, A2 , centre2, sigma2, gamma2, A3 , 
     return -((lm.models.voigt(x, A1, centre1, sigma1, gamma1)) \
              + (lm.models.voigt(x, A2, centre2, sigma2, gamma2)) \
              + (lm.models.voigt(x, A3 , centre3, sigma3, gamma3)))+1
-pVt1, covVt1 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt1)
-pVt2, covVt2 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt2)
-pVt3, covVt3 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt3)
-x2 = np.arange(574,583,0.000005)
+#pVt1, covVt1 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt1)
+#pVt2, covVt2 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt2)
+#pVt3, covVt3 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt3)
+#x2 = np.arange(574,583,0.000005)
 #plt.plot(xp, yp, color = "blue")
 
-p0 = np.array([1.5, 6530, 2.6, 1.85032, 2.5, 6565, 2.6, 1.85032, 1.5, 6600, 2.6, 1.85032])
-p,cov = opt.curve_fit(VoigtNew, xp_triplet, yp_triplet, p0)
+p0 = np.array([1.5, 6530, -2.6, 1.85032, 2.5, 6565, -2.6, 1.85032, 1.5, 6600, -2.6, 1.85032])
+popt_VoigtNew, cov_VoigtNew = opt.curve_fit(VoigtNew, xp_triplet, yp_triplet, p0)
 
-plt.plot(x2, VoigtNew(x2, p0[0], p0[1], p0[2], p0[3], p0[4], p0[5], p0[6], p0[7], p0[8], p0[9], p0[10], p0[11])\
+for c in zip(popt_VoigtNew, np.sqrt(np.diag(cov_VoigtNew))):
+    print("%.8f pm %.3g" % (c[0], c[1]))
+
+plt.figure()
+
+plt.plot(xp_triplet, VoigtNew(xp_triplet, p0[0], p0[1], p0[2], p0[3], p0[4], p0[5], p0[6], p0[7], p0[8], p0[9], p0[10], p0[11])\
          , linewidth=2, color = "royalblue", label = "Voigt fit")
+plt.plot(xp_triplet, yp_triplet,'x')
 
-
-
-
-
-plt.plot(x2, VoigtNew(x2, pVt1[0], pVt1[1], pVt1[2], pVt1[3], pVt2[0], pVt2[1], pVt2[2], pVt2[3], \
-        pVt3[0], pVt3[1], pVt3[2], pVt3[3]), linewidth=2, color = "royalblue", label = "Voigt fit")
+#plt.plot(x2, VoigtNew(x2, pVt1[0], pVt1[1], pVt1[2], pVt1[3], pVt2[0], pVt2[1], pVt2[2], pVt2[3], \
+#        pVt3[0], pVt3[1], pVt3[2], pVt3[3]), linewidth=2, color = "royalblue", label = "Voigt fit")
 
 plt.legend()
 #plt.xlim(575,582)
@@ -196,12 +199,8 @@ plt.show()
 #    print("%.8f pm %.3g" % (c[0], c[1]))
 #for c in zip(pVt3, np.sqrt(np.diag(covVt3))):
 #    print("%.8f pm %.3g" % (c[0], c[1]))
-
-for c in zip(p, np.sqrt(np.diag(cov))):
-    print("%.8f pm %.3g" % (c[0], c[1]))
-
-
 #%%
+""" Ran straight after Part 4 cell; Overlays a voigt profile (Not a fit, just a separate function) """
 #plt.figure()
 x_test = np.arange(6000,7200,0.01)
 
@@ -212,24 +211,19 @@ p0Vt3= np.array([1.5, 6600, 2.6, 1.85032])
 y_test = VoigtNew(x_test, p0Vt1[0], p0Vt1[1], p0Vt1[2], p0Vt1[3], p0Vt2[0], p0Vt2[1], p0Vt2[2], p0Vt2[3], p0Vt3[0], p0Vt3[1], p0Vt3[2], p0Vt3[3])
 plt.plot(x_test, y_test,label='data')
 plt.show()
-
-p1 = np.array([1, 6535, 3, 2])
-p2= np.array([2, 6550, 3, 2])
-p3= np.array([1, 6575, 3, 2])
-
-p, cov = opt.curve_fit(VoigtNew, x_test, y_test, p0 = [p1, p2, p3])
-
-plt.plot(x_test, VoigtNew(x_test, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], \
-        p[8], p[9], p[10], p[11]), linewidth=2, color = "royalblue", label = "Voigt fit")
-
-
-for c in zip(p, np.sqrt(np.diag(cov))):
-    print("%.8f pm %.3g" % (c[0], c[1]))
-
-
-#plt.legend()
-plt.show()
+##%% # Curvefits the above function 
+#p1 = np.array([1, 6535, 3, 2])
+#p2= np.array([2, 6550, 3, 2])
+#p3= np.array([1, 6575, 3, 2])
+#p, cov = opt.curve_fit(VoigtNew, x_test, y_test, p0 = [p1, p2, p3])
+#plt.plot(x_test, VoigtNew(x_test, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], \
+#        p[8], p[9], p[10], p[11]), linewidth=2, color = "royalblue", label = "Voigt fit")
+#for c in zip(p, np.sqrt(np.diag(cov))):
+#    print("%.8f pm %.3g" % (c[0], c[1]))
+##plt.legend()
+#plt.show()
 #%%
+""" Ha Data; Lorentzian fit _3Lorentzian; Run after clipping data xp_triplet yp_triplet """
 def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
     return -((amp1*wid1**2/((x-cen1)**2+wid1**2)) +\
             (amp2*wid2**2/((x-cen2)**2+wid2**2)) +\
@@ -240,7 +234,6 @@ popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet
 
 for c in zip(popt_3lorentz, np.sqrt(np.diag(cov_3lorentz))):
     print("%.8f pm %.3g" % (c[0], c[1]))
-
 
 plt.figure("WDJ110344.93+510048.61")
 plt.plot(xp_triplet,yp_triplet,'x', label = "WD Ha data")

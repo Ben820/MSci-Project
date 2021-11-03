@@ -82,6 +82,11 @@ p0 = [ampG1, cenG1, sigG1, ampL1, cenL1, widL1, ampG2, cenG2, sigG2, ampL2, cenL
       ampG3, cenG3, sigG3, ampL3, cenL3, widL3]
 popt_3voigt, cov_3voigt = opt.curve_fit(_3voigt, x_array, y_array_3voigt, p0)
 
+for c in zip(popt_3voigt, np.sqrt(np.diag(cov_3voigt))):
+    print("%.8f pm %.3g" % (c[0], c[1]))
+
+# Gives both gaussian and lorentzian component parameters (not general voigt parameters!)
+
 plt.figure()
 plt.plot(x_array, y_array_3voigt, 'x')
 plt.plot(x_array, _3voigt(x_array, *popt_3voigt))

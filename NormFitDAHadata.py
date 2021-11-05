@@ -27,13 +27,15 @@ Notes: data - MWD spectrum
 """
 #load data and sort into appropriate variables
 data = np.genfromtxt('DESI_WDJ110344.93+510048.61_bin0p2.dat', delimiter=' ')
+#DESI_WDJ110344.93+510048.61_bin0p2
+#DESI_WDJ112328.50+095619.35_bin0p2
 wavelength = data[:,0]
 flux = data[:,1]
 error = data[:,2]
 
 plt.figure("Whole spectrum")
 plt.grid()
-plt.plot(wavelength,flux,'x')
+plt.plot(wavelength,flux)
 plt.show()
 #%%
 """ Part 2: Performs cuts on the data to isolate the H-alpha region
@@ -141,7 +143,7 @@ Notes:
 xp_triplet = []
 yp_triplet =[]
 for a in range(len(masked_Ha_reg)):
-    if masked_Ha_reg[a] > 6500 and masked_Ha_reg[a] < 6650:
+    if masked_Ha_reg[a] > 6400 and masked_Ha_reg[a] < 6750:
         xp_triplet.append(masked_Ha_reg[a])
         yp_triplet.append(norm_spectra[a])
 xp_triplet = np.array(xp_triplet)
@@ -170,17 +172,20 @@ def VoigtNew(x, A1, centre1, sigma1, gamma1, A2 , centre2, sigma2, gamma2, A3 , 
 #x2 = np.arange(574,583,0.000005)
 #plt.plot(xp, yp, color = "blue")
 
-p0 = np.array([1.5, 6530, -2.6, 1.85032, 2.5, 6565, -2.6, 1.85032, 1.5, 6600, -2.6, 1.85032])
+p0 = np.array([5, 6530, 10, 1.85032, .5, 6565, 10, 1.85032, .5, 6600, 10, 1.85032])
 popt_VoigtNew, cov_VoigtNew = opt.curve_fit(VoigtNew, xp_triplet, yp_triplet, p0)
 
 for c in zip(popt_VoigtNew, np.sqrt(np.diag(cov_VoigtNew))):
     print("%.8f pm %.3g" % (c[0], c[1]))
 
-plt.figure()
+plt.figure("WDJ110344.93+510048.61 Voigt fit")
 
-plt.plot(xp_triplet, VoigtNew(xp_triplet, p0[0], p0[1], p0[2], p0[3], p0[4], p0[5], p0[6], p0[7], p0[8], p0[9], p0[10], p0[11])\
-         , linewidth=2, color = "royalblue", label = "Voigt fit")
-plt.plot(xp_triplet, yp_triplet,'x')
+plt.plot(xp_triplet, yp_triplet,'x', label = "WD Ha data")
+
+#plt.plot(xp_triplet, VoigtNew(xp_triplet, p0[0], p0[1], p0[2], p0[3], p0[4], p0[5], p0[6], p0[7], p0[8], p0[9], p0[10], p0[11])\
+#         , linewidth=2, color = "red", label = "Voigt function (NOT A FIT)")
+plt.plot(xp_triplet, VoigtNew(xp_triplet, *popt_VoigtNew), linewidth=2, color = "red", \
+                              label = "Voigt c_fit")
 
 #plt.plot(x2, VoigtNew(x2, pVt1[0], pVt1[1], pVt1[2], pVt1[3], pVt2[0], pVt2[1], pVt2[2], pVt2[3], \
 #        pVt3[0], pVt3[1], pVt3[2], pVt3[3]), linewidth=2, color = "royalblue", label = "Voigt fit")
@@ -231,13 +236,18 @@ def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
 
 popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
                                             p0=[0.8, 6525, 10, 0.8, 6565, 10, 0.8, 6600, 10])
+# Here p0 comes from varying the parameters from a overlaid Voigt function (not a fitted function)
+# p0 are guesstimate parameters from a previous overlaid function 
 
 for c in zip(popt_3lorentz, np.sqrt(np.diag(cov_3lorentz))):
     print("%.8f pm %.3g" % (c[0], c[1]))
 
-plt.figure("WDJ110344.93+510048.61")
+plt.figure("WDJ110344.93+510048.61 Lorentzian fit")
 plt.plot(xp_triplet,yp_triplet,'x', label = "WD Ha data")
-plt.plot(xp_triplet, _3Lorentzian(xp_triplet, *popt_3lorentz), label = "Lorentzian fit")
+plt.plot(xp_triplet, _3Lorentzian(xp_triplet, *popt_3lorentz), label = "Lorentzian c_fit")
+plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+plt.ylabel("Frequency")
+plt.grid()
 plt.legend()
 plt.show()
 

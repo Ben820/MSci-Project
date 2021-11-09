@@ -18,7 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 import lmfit as lm
-#%%
+import pylab
+##%%
 """ Part 1: Load data
 
 Notes: data - MWD spectrum
@@ -26,7 +27,8 @@ Notes: data - MWD spectrum
        flux - y-values
 """
 #load data and sort into appropriate variables
-data = np.genfromtxt('DESI_WDJ110344.93+510048.61_bin0p2.dat', delimiter=' ')
+filename = "DESI_WDJ110344.93+510048.61_bin0p2.dat"
+data = np.genfromtxt(f'{filename}', delimiter=' ')
 #DESI_WDJ110344.93+510048.61_bin0p2
 #DESI_WDJ112328.50+095619.35_bin0p2
 wavelength = data[:,0]
@@ -34,8 +36,10 @@ flux = data[:,1]
 error = data[:,2]
 
 plt.figure("Whole spectrum")
-plt.grid()
 plt.plot(wavelength,flux)
+plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+plt.ylabel("Flux", size = "15")
+plt.grid()
 plt.show()
 #%%
 """ Part 2: Performs cuts on the data to isolate the H-alpha region
@@ -63,6 +67,8 @@ masked_Ha_reg = wavelength[start_Ha:end_Ha]
 plt.figure("Continuum with absorption feature")
 plt.grid()
 plt.plot(masked_Ha_reg,masked_Ha_flux,'x')
+plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+plt.ylabel("Flux", size = "15")
 plt.show()
 ##%%
 """ Part 3: Removes the absorption region to isolate the continuum
@@ -83,6 +89,8 @@ abs_reg = wavelength[abs_start:abs_end]
 plt.figure("Absoprtion feature region +")
 plt.grid()
 plt.plot(abs_reg,abs_flux)
+plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+plt.ylabel("Flux", size = "15")
 plt.show()
 
 #find the wavelength values where the feature should be cut (manual values are 
@@ -102,13 +110,15 @@ del masked_wavelength[505:517]
 plt.figure("Spectra with absorption feature removed")
 plt.grid()
 plt.plot(masked_wavelength,masked_flux,'x')
+plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+plt.ylabel("Flux", size = "15")
 plt.show()
 
 #avg_start_array = masked_flux[0:10]
 #avg_end_array = masked_flux[-11:-1]
 #avg_start_val = np.mean(masked_flux)
 #avg_end_val = np.mean(masked_flux)
-#%%
+##%%
 """ Part 4: Fits a polynomial to the continuum and normalises the spectrum
 
 Notes: Poly_3o is a third-order polynomial function which fits the continuum using a least-squares method
@@ -133,6 +143,8 @@ plt.grid()
 plt.plot(masked_Ha_reg, Poly_3o(masked_Ha_reg, p[0], p[1], p[2], p[3])/Continuum, \
          zorder=4,color = 'red', label = "Poly")
 plt.plot(masked_Ha_reg, norm_spectra) #plot the normalised spectrum
+plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+plt.ylabel("Normalised Flux", size = "15")
 plt.show()
 
 #%%
@@ -149,11 +161,11 @@ for a in range(len(masked_Ha_reg)):
 xp_triplet = np.array(xp_triplet)
 yp_triplet = np.array(yp_triplet)
 
-
-plt.figure()
-plt.plot(xp_triplet, yp_triplet,'x')
-plt.show()    
-#%% VOIGT TRIPLET
+# Plots isolated absoption feature 
+#plt.figure()
+#plt.plot(xp_triplet, yp_triplet,'x')
+#plt.show()    
+##%% VOIGT TRIPLET
 """ Initial Voigt Triplet Fitting attempt; VoigtNew """
 #plt.plot(x, y, color = "red", label = "Corrected Hg \n doublet")
 #p0Vt1 = np.array([1.5, 6530, 2.6, 1.85032])
@@ -178,7 +190,7 @@ popt_VoigtNew, cov_VoigtNew = opt.curve_fit(VoigtNew, xp_triplet, yp_triplet, p0
 for c in zip(popt_VoigtNew, np.sqrt(np.diag(cov_VoigtNew))):
     print("%.8f pm %.3g" % (c[0], c[1]))
 
-plt.figure("WDJ110344.93+510048.61 Voigt fit")
+plt.figure(f"Voigt fit {filename}")
 
 plt.plot(xp_triplet, yp_triplet,'x', label = "WD Ha data")
 
@@ -193,8 +205,8 @@ plt.plot(xp_triplet, VoigtNew(xp_triplet, *popt_VoigtNew), linewidth=2, color = 
 plt.legend()
 #plt.xlim(575,582)
 #plt.ylim(-0.01,0.4)
-plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
-plt.ylabel("Frequency")
+plt.xlabel("Wavelength, $[\AA]$" , size = "15")
+plt.ylabel("Normalised flux", size = "15")
 plt.grid()
 plt.show()
 #plt.savefig("Voigt fit doublet", dpi = 1000)
@@ -204,29 +216,42 @@ plt.show()
 #    print("%.8f pm %.3g" % (c[0], c[1]))
 #for c in zip(pVt3, np.sqrt(np.diag(covVt3))):
 #    print("%.8f pm %.3g" % (c[0], c[1]))
-#%%
+##%%
 """ Ran straight after Part 4 cell; Overlays a voigt profile (Not a fit, just a separate function) """
-#plt.figure()
-x_test = np.arange(6000,7200,0.01)
-
-p0Vt1 = np.array([1.5, 6530, 2.6, 1.85032])
-p0Vt2= np.array([2.5, 6565, 2.6, 1.85032])
-p0Vt3= np.array([1.5, 6600, 2.6, 1.85032])
-
-y_test = VoigtNew(x_test, p0Vt1[0], p0Vt1[1], p0Vt1[2], p0Vt1[3], p0Vt2[0], p0Vt2[1], p0Vt2[2], p0Vt2[3], p0Vt3[0], p0Vt3[1], p0Vt3[2], p0Vt3[3])
-plt.plot(x_test, y_test,label='data')
-plt.show()
-##%% # Curvefits the above function 
-#p1 = np.array([1, 6535, 3, 2])
-#p2= np.array([2, 6550, 3, 2])
-#p3= np.array([1, 6575, 3, 2])
-#p, cov = opt.curve_fit(VoigtNew, x_test, y_test, p0 = [p1, p2, p3])
-#plt.plot(x_test, VoigtNew(x_test, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], \
-#        p[8], p[9], p[10], p[11]), linewidth=2, color = "royalblue", label = "Voigt fit")
-#for c in zip(p, np.sqrt(np.diag(cov))):
-#    print("%.8f pm %.3g" % (c[0], c[1]))
-##plt.legend()
+##plt.figure()
+#x_test = np.arange(6000,7200,0.01)
+#
+#p0Vt1 = np.array([1.5, 6530, 2.6, 1.85032])
+#p0Vt2= np.array([2.5, 6565, 2.6, 1.85032])
+#p0Vt3= np.array([1.5, 6600, 2.6, 1.85032])
+#
+#y_test = VoigtNew(x_test, p0Vt1[0], p0Vt1[1], p0Vt1[2], p0Vt1[3], p0Vt2[0], p0Vt2[1], p0Vt2[2], p0Vt2[3], p0Vt3[0], p0Vt3[1], p0Vt3[2], p0Vt3[3])
+#plt.plot(x_test, y_test,label='data')
 #plt.show()
+###%% # Curvefits the above function 
+##p1 = np.array([1, 6535, 3, 2])
+##p2= np.array([2, 6550, 3, 2])
+##p3= np.array([1, 6575, 3, 2])
+##p, cov = opt.curve_fit(VoigtNew, x_test, y_test, p0 = [p1, p2, p3])
+##plt.plot(x_test, VoigtNew(x_test, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], \
+##        p[8], p[9], p[10], p[11]), linewidth=2, color = "royalblue", label = "Voigt fit")
+##for c in zip(p, np.sqrt(np.diag(cov))):
+##    print("%.8f pm %.3g" % (c[0], c[1]))
+###plt.legend()
+##plt.show()
+##%%
+""" Voigt Residuals Plot """
+Residuals= VoigtNew(xp_triplet, *popt_VoigtNew)-yp_triplet
+print("Residual sum of squares = ", sum(np.square(Residuals)))
+
+plt.figure(f"Residuals Voigt Fit {filename}")
+plt.plot(xp_triplet, Residuals, linewidth=2, label = "Voigt fit Residuals")
+plt.xlabel("Wavelength, $[\AA]$", size = "15")
+plt.ylabel("Residuals", size = "15")
+plt.legend()
+plt.grid()
+#plt.savefig("Gaussian Residuals", dpi = 1000)
+plt.show()
 #%%
 """ Ha Data; Lorentzian fit _3Lorentzian; Run after clipping data xp_triplet yp_triplet """
 def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
@@ -242,13 +267,26 @@ popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet
 for c in zip(popt_3lorentz, np.sqrt(np.diag(cov_3lorentz))):
     print("%.8f pm %.3g" % (c[0], c[1]))
 
-plt.figure("WDJ110344.93+510048.61 Lorentzian fit")
+plt.figure(f"Lorentzian fit {filename}")
 plt.plot(xp_triplet,yp_triplet,'x', label = "WD Ha data")
 plt.plot(xp_triplet, _3Lorentzian(xp_triplet, *popt_3lorentz), label = "Lorentzian c_fit")
-plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
-plt.ylabel("Frequency")
+plt.xlabel("Wavelength, $[\AA]$" , size = "15")
+plt.ylabel("Normalised flux", size = "15")
 plt.grid()
 plt.legend()
+plt.show()
+##%%
+""" Lorentzian Residuals Plot """
+Residuals= _3Lorentzian(xp_triplet, *popt_3lorentz)-yp_triplet
+print("Residual sum of squares = ", sum(np.square(Residuals)))
+
+plt.figure(f"Residuals Voigt Fit {filename}")
+plt.plot(xp_triplet, Residuals, linewidth=2, label = "Lorentzian fit Residuals")
+plt.xlabel("Wavelength, $[\AA]$", size = "15")
+plt.ylabel("Residuals", size = "15")
+plt.legend()
+plt.grid()
+#plt.savefig("Gaussian Residuals", dpi = 1000)
 plt.show()
 
 

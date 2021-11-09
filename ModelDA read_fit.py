@@ -5,7 +5,7 @@ Created on Wed Oct 20 15:01:17 2021
 @author: Ben Amroota
 """
 """
-Reading data from DA white dwarfs
+Reading data from model DA white dwarfs
 - start date: 10/10/21 
 Directories: 
     Documents Imperial Year 4 MSci Project DA_models DA_models
@@ -24,13 +24,13 @@ import matplotlib.pyplot as plt
 import scipy.optimize as opt
 import lmfit as lm
 
-##DA_models\DA_models
-#data = np.genfromtxt('database1.dat', delimiter=' ')
-#stdwave = np.arange(3000,11000.1, 0.1)
+#DA_models\DA_models
+data = np.genfromtxt('database1.dat', delimiter=' ')
+stdwave = np.arange(3000,11000.1, 0.1)
 
 
 ##DESI_DxH\DESI_DxH
-data, stdwave, error = np.loadtxt('DESI_WDJ073615.92+403335.18_bin0p2.dat', unpack = True)
+#data, stdwave, error = np.loadtxt('DESI_WDJ073615.92+403335.18_bin0p2.dat', unpack = True)
 
 #%%
 """ Part 1: Removes absorption featrure from continuum
@@ -213,7 +213,7 @@ p0Vt3= np.array([25.355, 6670, -2.6, 0.85032])
 #pylab.plot(xg, L(xg, gamma), ls='--', label='Lorentzian')
 #lm.models.voigt()
 def VoigtNew(x, A1, centre1, sigma1, gamma1, A2 , centre2, sigma2, gamma2, A3 , centre3, sigma3, gamma3):
-    return (lm.models.voigt(x, A1, centre1, sigma1, gamma1)) + (lm.models.voigt(x, A2, centre2, sigma2, gamma2)) + (lm.models.voigt(x, A3 , centre3, sigma3, gamma3))
+    return -((lm.models.voigt(x, A1, centre1, sigma1, gamma1)) + (lm.models.voigt(x, A2, centre2, sigma2, gamma2)) + (lm.models.voigt(x, A3 , centre3, sigma3, gamma3)))+1
 pVt1, covVt1 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt1)
 pVt2, covVt2 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt2)
 pVt3, covVt3 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt3)

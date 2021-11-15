@@ -174,17 +174,33 @@ yp_triplet = np.array(yp_triplet)
 #pylab.plot(xg, G(xg, alpha), ls=':', label='Gaussian')
 #pylab.plot(xg, L(xg, gamma), ls='--', label='Lorentzian')
 #lm.models.voigt()
-def VoigtNew(x, A1, centre1, sigma1, gamma1, A2 , centre2, sigma2, gamma2, A3 , centre3, sigma3, gamma3):
-    return -((lm.models.voigt(x, A1, centre1, sigma1, gamma1)) \
-             + (lm.models.voigt(x, A2, centre2, sigma2, gamma2)) \
-             + (lm.models.voigt(x, A3 , centre3, sigma3, gamma3)))+1
+#def VoigtNew(x, A1, centre1, sigma1, gamma1, A2 , centre2, sigma2, gamma2, A3 , centre3, sigma3, gamma3):
+#    return -((lm.models.voigt(x, A1, centre1, sigma1, gamma1)) \
+#             + (lm.models.voigt(x, A2, centre2, sigma2, gamma2)) \
+#             + (lm.models.voigt(x, A3 , centre3, sigma3, gamma3)))+1
 #pVt1, covVt1 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt1)
 #pVt2, covVt2 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt2)
 #pVt3, covVt3 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt3)
 #x2 = np.arange(574,583,0.000005)
 #plt.plot(xp, yp, color = "blue")
 
-p0 = np.array([5, 6530, 10, 1.85032, .5, 6565, 10, 1.85032, .5, 6600, 10, 1.85032])
+def VoigtNew(x, lambda0, B, A1, sigma1, gamma1, A2, sigma2, gamma2):
+    #    lambda0 = 6562.8
+    A = np.square(lambda0/6564)
+    delt_lam = 20.2*A*B
+    lambda_minus = lambda0 - delt_lam
+    lambda_plus = lambda0 + delt_lam     
+
+    return -((lm.models.voigt(x, A1, lambda_minus, sigma1, gamma1)) \
+             + (lm.models.voigt(x, A2, lambda0, sigma2, gamma2)) \
+             + (lm.models.voigt(x, A1 , lambda_plus, sigma1, gamma1)))+1
+
+# parameters for old Voigt (12 params)
+#p0 = np.array([5, 6530, 10, 1.85032, .5, 6565, 10, 1.85032, .5, 6600, 10, 1.85032])
+    
+# parameters for new Voigt (8 params)    
+p0 = np.array([6562.8, 2, 5, 10, 1.85032, .5, 10, 1.85032])
+
 popt_VoigtNew, cov_VoigtNew = opt.curve_fit(VoigtNew, xp_triplet, yp_triplet, p0)
 
 for c in zip(popt_VoigtNew, np.sqrt(np.diag(cov_VoigtNew))):
@@ -265,8 +281,8 @@ def delta_lambda(B):
 def delta_lambda2(B):
     return (4.67*10**-7)*(np.square(6562.8))*B*(1*10**6)
 
-def _3Lorentzian(x, B, amp1, wid1, amp2, wid2):
-    lambda0 = 6562.8
+def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
+#    lambda0 = 6562.8
     A = np.square(lambda0/6564)
     delt_lam = 20.2*A*B
     lambda_minus = lambda0 - delt_lam
@@ -275,13 +291,13 @@ def _3Lorentzian(x, B, amp1, wid1, amp2, wid2):
             (amp2*wid2**2/((x-lambda0)**2+wid2**2)) +\
                 (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
 
-def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
-    return -((amp1*wid1**2/((x-cen1)**2+wid1**2)) +\
-            (amp2*wid2**2/((x-cen2)**2+wid2**2)) +\
-                (amp3*wid3**2/((x-cen3)**2+wid3**2)))+1
+#def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
+#    return -((amp1*wid1**2/((x-cen1)**2+wid1**2)) +\
+#            (amp2*wid2**2/((x-cen2)**2+wid2**2)) +\
+#                (amp3*wid3**2/((x-cen3)**2+wid3**2)))+1
 
 popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
-                                            p0=[1, 0.8, 10, 0.8, 10])
+                                            p0=[6562.8, 1, 0.8, 10, 0.8, 10])
 #popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
 #                                            p0=[0.8, 6525, 10, 0.8, 6565, 10, 0.8, 6600, 10]) 
 #parameters from old Lorentzian

@@ -254,13 +254,37 @@ plt.grid()
 plt.show()
 #%%
 """ Ha Data; Lorentzian fit _3Lorentzian; Run after clipping data xp_triplet yp_triplet """
+
+# DEFINE ANOTHER FUNCTION HERE 
+# Zeeman splitting - returns delta_lambda 
+def delta_lambda(B):
+    A = np.square(6562.8/6564)
+    y = 20.2*A*B
+    return y 
+
+def delta_lambda2(B):
+    return (4.67*10**-7)*(np.square(6562.8))*B*(1*10**6)
+
+def _3Lorentzian(x, B, amp1, wid1, amp2, wid2):
+    lambda0 = 6562.8
+    A = np.square(lambda0/6564)
+    delt_lam = 20.2*A*B
+    lambda_minus = lambda0 - delt_lam
+    lambda_plus = lambda0 + delt_lam     
+    return -((amp1*wid1**2/((x-lambda_minus)**2+wid1**2)) +\
+            (amp2*wid2**2/((x-lambda0)**2+wid2**2)) +\
+                (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
+
 def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
     return -((amp1*wid1**2/((x-cen1)**2+wid1**2)) +\
             (amp2*wid2**2/((x-cen2)**2+wid2**2)) +\
                 (amp3*wid3**2/((x-cen3)**2+wid3**2)))+1
 
 popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
-                                            p0=[0.8, 6525, 10, 0.8, 6565, 10, 0.8, 6600, 10])
+                                            p0=[1, 0.8, 10, 0.8, 10])
+#popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
+#                                            p0=[0.8, 6525, 10, 0.8, 6565, 10, 0.8, 6600, 10]) 
+#parameters from old Lorentzian
 # Here p0 comes from varying the parameters from a overlaid Voigt function (not a fitted function)
 # p0 are guesstimate parameters from a previous overlaid function 
 

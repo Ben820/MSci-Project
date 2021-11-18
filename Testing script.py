@@ -225,4 +225,27 @@ plt.show()
 
 
 
+""" Ran straight after Part 4 cell; Overlays a voigt profile (Not a fit, just a separate function) """
+##plt.figure()
+#x_test = np.arange(6000,7200,0.01)
+#
+#p0Vt1 = np.array([1.5, 6530, 2.6, 1.85032])
+#p0Vt2= np.array([2.5, 6565, 2.6, 1.85032])
+#p0Vt3= np.array([1.5, 6600, 2.6, 1.85032])
+#
+#y_test = VoigtNew(x_test, p0Vt1[0], p0Vt1[1], p0Vt1[2], p0Vt1[3], p0Vt2[0], p0Vt2[1], p0Vt2[2], p0Vt2[3], p0Vt3[0], p0Vt3[1], p0Vt3[2], p0Vt3[3])
+#plt.plot(x_test, y_test,label='data')
+#plt.show()
+###%% # Curvefits the above function 
+##p1 = np.array([1, 6535, 3, 2])
+##p2= np.array([2, 6550, 3, 2])
+##p3= np.array([1, 6575, 3, 2])
+##p, cov = opt.curve_fit(VoigtNew, x_test, y_test, p0 = [p1, p2, p3])
+##plt.plot(x_test, VoigtNew(x_test, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], \
+##        p[8], p[9], p[10], p[11]), linewidth=2, color = "royalblue", label = "Voigt fit")
+##for c in zip(p, np.sqrt(np.diag(cov))):
+##    print("%.8f pm %.3g" % (c[0], c[1]))
+###plt.legend()
+##plt.show()
+##%%
 

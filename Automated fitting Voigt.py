@@ -161,28 +161,8 @@ for a in range(len(masked_Ha_reg)):
 xp_triplet = np.array(xp_triplet)
 yp_triplet = np.array(yp_triplet)
 
-# Plots isolated absoption feature 
-#plt.figure()
-#plt.plot(xp_triplet, yp_triplet,'x')
-#plt.show()    
 ##%% VOIGT TRIPLET
 """ Initial Voigt Triplet Fitting attempt; VoigtNew """
-#plt.plot(x, y, color = "red", label = "Corrected Hg \n doublet")
-#p0Vt1 = np.array([1.5, 6530, 2.6, 1.85032])
-#p0Vt2= np.array([2.5, 6565, 2.6, 1.85032])
-#p0Vt3= np.array([1.5, 6600, 2.6, 1.85032])
-#pylab.plot(xg, G(xg, alpha), ls=':', label='Gaussian')
-#pylab.plot(xg, L(xg, gamma), ls='--', label='Lorentzian')
-#lm.models.voigt()
-#def VoigtNew(x, A1, centre1, sigma1, gamma1, A2 , centre2, sigma2, gamma2, A3 , centre3, sigma3, gamma3):
-#    return -((lm.models.voigt(x, A1, centre1, sigma1, gamma1)) \
-#             + (lm.models.voigt(x, A2, centre2, sigma2, gamma2)) \
-#             + (lm.models.voigt(x, A3 , centre3, sigma3, gamma3)))+1
-#pVt1, covVt1 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt1)
-#pVt2, covVt2 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt2)
-#pVt3, covVt3 = opt.curve_fit(lm.models.voigt, xp_triplet, yp_triplet, p0Vt3)
-#x2 = np.arange(574,583,0.000005)
-#plt.plot(xp, yp, color = "blue")
 
 def VoigtNew(x, lambda0, B, A1, sigma1, gamma1, A2, sigma2, gamma2):
     #    lambda0 = 6562.8
@@ -194,14 +174,36 @@ def VoigtNew(x, lambda0, B, A1, sigma1, gamma1, A2, sigma2, gamma2):
     return -((lm.models.voigt(x, A1, lambda_minus, sigma1, gamma1)) \
              + (lm.models.voigt(x, A2, lambda0, sigma2, gamma2)) \
              + (lm.models.voigt(x, A1 , lambda_plus, sigma1, gamma1)))+1
-
-# parameters for old Voigt (12 params)
-#p0 = np.array([5, 6530, 10, 1.85032, .5, 6565, 10, 1.85032, .5, 6600, 10, 1.85032])
     
-# parameters for new Voigt (8 params)    
-p0 = np.array([6562.8, 2, 5, 10, 1.85032, .5, 10, 1.85032])
+# parameters for new Voigt (8 params)
 
-popt_VoigtNew, cov_VoigtNew = opt.curve_fit(VoigtNew, xp_triplet, yp_triplet, p0)
+Data = {}
+Res_list = []
+B_list = []
+lambda0_list = []
+
+for i in range(1,50):
+    p0 = np.array([6562.8, i, 5, 10, 1.85032, .5, 10, 1.85032])
+    
+    try:
+        popt_VoigtNew, cov_VoigtNew = opt.curve_fit(VoigtNew, xp_triplet, yp_triplet, p0)
+    except:
+        pass
+    
+#    for c in zip(popt_VoigtNew, np.sqrt(np.diag(cov_VoigtNew))):
+#        print("%.8f pm %.3g" % (c[0], c[1]))
+    Residuals= VoigtNew(xp_triplet, *popt_VoigtNew)-yp_triplet
+    Res_list.append(sum(np.square(Residuals)))
+    B_list.append(popt_VoigtNew[1])
+    lambda0_list.append(popt_VoigtNew[0])
+    
+Data[1] = [Res_list, B_list, lambda0_list]
+
+index = np.where(Res_list == np.amin(Res_list))[0][0]
+
+# The determined B value is BACK INTO curvefit to re-estimate the final parameters of the fit 
+popt_VoigtNew, cov_VoigtNew = opt.curve_fit(VoigtNew, xp_triplet, yp_triplet, \
+                                            p0=[6562.8, B_list[index], 5, 10, 1.85032, .5, 10, 1.85032])
 
 for c in zip(popt_VoigtNew, np.sqrt(np.diag(cov_VoigtNew))):
     print("%.8f pm %.3g" % (c[0], c[1]))
@@ -209,86 +211,27 @@ for c in zip(popt_VoigtNew, np.sqrt(np.diag(cov_VoigtNew))):
 Residuals= VoigtNew(xp_triplet, *popt_VoigtNew)-yp_triplet
 print("Voigt Residual sum of squares = ", sum(np.square(Residuals)))
 
-
-fig, axs = plt.subplots(2)
+##%% PLotting Cell
+fig, axs = plt.subplots(2, gridspec_kw={'height_ratios': [2.5, 1]})
 fig.suptitle(f"Voigt fit {filename}", fontsize = "13")
 axs[0].plot(xp_triplet, yp_triplet,'x', label = "WD Ha data")
 axs[0].plot(xp_triplet, VoigtNew(xp_triplet, *popt_VoigtNew), linewidth=2, color = "red", \
                               label = "Voigt c_fit")
 for ax in axs.flat:
-    ax.set_xlabel('Wavelength, $[\AA]$', fontsize = "13")
-    ax.set_ylabel('Normalised flux', fontsize = "13")
-for ax in axs.flat:
-    ax.label_outer()
-axs[0].grid()
-#""" Voigt Residuals Plot """
-axs[1].plot(xp_triplet, Residuals, linewidth=2, label = "Voigt fit Residuals")
-axs[0].legend()
-axs[1].legend()
-axs[1].grid()
-#plt.savefig("Gaussian Residuals", dpi = 1000)
-plt.show()
-#%%
-""" Ha Data; Lorentzian fit _3Lorentzian; Run after clipping data xp_triplet yp_triplet """
-
-# DEFINE ANOTHER FUNCTION HERE 
-# Zeeman splitting - returns delta_lambda 
-def delta_lambda(B):
-    A = np.square(6562.8/6564)
-    y = 20.2*A*B
-    return y 
-
-def delta_lambda2(B):
-    return (4.67*10**-7)*(np.square(6562.8))*B*(1*10**6)
-
-def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
-#    lambda0 = 6562.8
-    A = np.square(lambda0/6564)
-    delt_lam = 20.2*A*B
-    lambda_minus = lambda0 - delt_lam
-    lambda_plus = lambda0 + delt_lam     
-    return -((amp1*wid1**2/((x-lambda_minus)**2+wid1**2)) +\
-            (amp2*wid2**2/((x-lambda0)**2+wid2**2)) +\
-                (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
-
-#def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
-#    return -((amp1*wid1**2/((x-cen1)**2+wid1**2)) +\
-#            (amp2*wid2**2/((x-cen2)**2+wid2**2)) +\
-#                (amp3*wid3**2/((x-cen3)**2+wid3**2)))+1
-
-popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
-                                            p0=[6562.8, 1, 0.8, 10, 0.8, 10])
-#popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
-#                                            p0=[0.8, 6525, 10, 0.8, 6565, 10, 0.8, 6600, 10]) 
-#parameters from old Lorentzian
-# Here p0 comes from varying the parameters from a overlaid Voigt function (not a fitted function)
-# p0 are guesstimate parameters from a previous overlaid function 
-
-for c in zip(popt_3lorentz, np.sqrt(np.diag(cov_3lorentz))):
-    print("%.8f pm %.3g" % (c[0], c[1]))
-
-Residuals= _3Lorentzian(xp_triplet, *popt_3lorentz)-yp_triplet
-print("Lorentzian Residual sum of squares = ", sum(np.square(Residuals)))
-
-fig, axs = plt.subplots(2, gridspec_kw={'height_ratios': [2.5, 1]})
-fig.suptitle(f"Lorentzian fit {filename}", fontsize = "13")
-axs[0].plot(xp_triplet, yp_triplet,'x', label = "WD Ha data")
-axs[0].plot(xp_triplet, _3Lorentzian(xp_triplet, *popt_3lorentz), linewidth=2, color = "orange", \
-                              label = "Lorentzian c_fit")
-for ax in axs.flat:
-    ax.set_xlabel('Wavelength, $[\AA]$', fontsize = "13")
+    ax.set_xlabel('Wavelength $[\AA]$', fontsize = "13")
     ax.set_ylabel('Normalised flux', fontsize = "13")
 for ax in axs.flat:
     ax.label_outer()
 axs[1].set_ylabel('Flux residuals')
 axs[0].grid()
 #""" Voigt Residuals Plot """
-axs[1].plot(xp_triplet, Residuals, linewidth=2, label = "Lorentzian fit Residuals")
+axs[1].plot(xp_triplet, Residuals, linewidth=2)#, label = "Lorentzian fit Residuals")
 axs[0].legend()
 #axs[1].legend()
 axs[1].grid()
 #plt.savefig("Gaussian Residuals", dpi = 1000)
 plt.show()
+
 
 
 

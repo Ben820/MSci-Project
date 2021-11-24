@@ -14,7 +14,9 @@ import scipy.optimize as opt
 import lmfit as lm
 #%%
 """ Method to clean up noise 
+Needs WDspectra py file to run
 Problems: Removes details in peaks e.g amplitude and width differences """
+
 import numpy as np
  
 kernel_size = 50

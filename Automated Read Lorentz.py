@@ -49,8 +49,10 @@ entries = os.listdir()
 #entries = os.listdir('DESI_DxH\DESI_DxH')
 
 files = entries.copy()
-del files[0] #remove DA spectrum that was accidentally included
-del files[113:114] #remove other .py files in this directory
+
+""" FOR DxH 1 ONLY!!! """
+#del files[0] #remove DA spectrum that was accidentally included
+#del files[113:114] #remove other .py files in this directory
 
 #split files list into 6 (fairly) equally-sized arrays which allows the maximum number of figures to be generated
 one = files[0:20]
@@ -86,7 +88,9 @@ column_names = ["Filename", "Linear", "Quadratic", "Undec", "DA", "Comm"]
 #datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\First categorisation 113 systems.csv', skiprows = 1, names = column_names)
 
 column_names = ["Filename", "Linear", "Quadratic", "Undec", "DA", "Size", "Comm"]
-datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\First categorisation 113 systems 2.csv', skiprows = 1, names = column_names)
+datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Third categorisation DxH.csv', skiprows = 1, names = column_names)
+datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\First categorisation DxH2.csv', skiprows = 1, names = column_names)
+
 ##%%
 
 #Note it reads datasets in order so that the order of WDs is maintained

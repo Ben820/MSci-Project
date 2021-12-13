@@ -23,15 +23,16 @@ import matplotlib.pyplot as plt
 #plt.show()
 #%%
 #simulated Preston linear split and quadratic splits for right component
-B = np.linspace(0,1E6,50000)
-a = 2.011385057E-25/((1E-10)**2)
+B = np.linspace(0,20,50)
+zeroline = np.zeros(len(B))
+a = 20.11385057
 left_linear = ((-a)*(B))
 right_linear = a*B
 #plt.figure()
 #plt.plot(left_linear,B,'y--')
 #plt.plot(right_linear,B,'k--')
 #plt.grid()
-q = 1.737366235E-33/((1E-10)**2)
+q = 0.00173737153
 ml1 = 1
 ml2 = 2
 B_sq = np.square(B)
@@ -39,7 +40,11 @@ right_quad_1 = (-2)*q*B_sq
 right_quad_2 = (-5)*q*B_sq
 left_quad_1 = (2)*q*B_sq
 left_quad_2 = (5)*q*B_sq
-centre_quad = q*B_sq
+centre_quad = (-q)*B_sq
+
+quad_disp_pi = -0.00208076086*B_sq
+quad_disp_sig = 2*quad_disp_pi
+
 #plt.plot(right_quad_1,B,'r--')
 #plt.plot(right_quad_2,B,'m--')
 #plt.plot(left_quad_1,B,'c--')
@@ -50,24 +55,42 @@ centre_quad = q*B_sq
 #plt.show()
 plt.figure()
 plt.plot(right_linear,B,'k')
-plt.plot(left_linear,B,'k')
-plt.axvline(0, color='k')
-plt.plot(right_linear+right_quad_1,B,'r--')
-plt.plot(right_linear+right_quad_2,B,'m--')
-plt.plot(right_linear+left_quad_1,B,'y--')
-plt.plot(right_linear+left_quad_2,B,'c--')
-plt.plot(right_linear+centre_quad,B,'b--')
+#plt.plot(left_linear,B,'k')
+
+plt.plot(right_linear+right_quad_1-quad_disp_pi,B,'r--')
+plt.plot(right_linear+right_quad_2-quad_disp_pi,B,'m--')
+plt.plot(right_linear+left_quad_1-quad_disp_pi,B,'y--')
+plt.plot(right_linear+left_quad_2-quad_disp_pi,B,'c--')
+plt.plot(right_linear+centre_quad-quad_disp_pi,B,'b--')
+#%%
+plt.figure()
+plt.plot(zeroline, B, color='k')
+plt.plot(right_quad_1-quad_disp_pi,B,'r--')
+plt.plot(right_quad_2-quad_disp_sig,B,'m--')
+plt.plot(left_quad_1+quad_disp_pi,B,'y--')
+plt.plot(left_quad_2+quad_disp_sig,B,'c--')
+plt.plot(centre_quad-quad_disp_pi,B,'b--')
+plt.figure()
+plt.plot(zeroline, B, color='k')
 plt.plot(right_quad_1,B,'r--')
 plt.plot(right_quad_2,B,'m--')
 plt.plot(left_quad_1,B,'y--')
 plt.plot(left_quad_2,B,'c--')
 plt.plot(centre_quad,B,'b--')
-plt.plot(left_linear+right_quad_1,B,'r--')
-plt.plot(left_linear+right_quad_2,B,'m--')
-plt.plot(left_linear+left_quad_1,B,'y--')
-plt.plot(left_linear+left_quad_2,B,'c--')
-plt.plot(left_linear+centre_quad,B,'b--')
+plt.figure()
+plt.plot(zeroline, B, color='k')
+plt.plot(right_quad_1-quad_disp_pi,B,'r--')
+plt.plot(right_quad_2-quad_disp_pi,B,'m--')
+plt.plot(left_quad_1+quad_disp_pi,B,'y--')
+plt.plot(left_quad_2+quad_disp_pi,B,'c--')
+plt.plot(centre_quad-quad_disp_pi,B,'b--')
+#%%
+plt.plot(left_linear+right_quad_1-quad_disp_sig,B,'r--')
+plt.plot(left_linear+right_quad_2-quad_disp_sig,B,'m--')
+plt.plot(left_linear+left_quad_1-quad_disp_sig,B,'y--')
+plt.plot(left_linear+left_quad_2-quad_disp_sig,B,'c--')
+plt.plot(left_linear+centre_quad-quad_disp_sig,B,'b--')
 plt.xlabel(r'$\Delta\lambda (\AA)$')
-plt.ylabel('B Field Strength (G)')
+plt.ylabel('B Field Strength (MG)')
 plt.grid()
 plt.show()

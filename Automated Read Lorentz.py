@@ -55,6 +55,7 @@ files = entries.copy()
 #del files[113:114] #remove other .py files in this directory
 
 #split files list into 6 (fairly) equally-sized arrays which allows the maximum number of figures to be generated
+# Specifically for either \DxH or \DxH\DAT files path
 one = files[0:20]
 two = files[20:40]
 three = files[40:60]
@@ -62,7 +63,20 @@ four = files[60:80]
 five = files[80:100]
 six = files[100:len(files)]
 
-subfolder = six
+# Specifically for \Combined dataset filepath
+one = files[0:20]
+two = files[20:40]
+three = files[40:60]
+four = files[60:80]
+five = files[80:100]
+six = files[100:120]
+seven = files[120:140]
+eight = files[140:160]
+nine = files[160:180]
+ten = files[180:200]
+eleven= files[200:len(files)]
+
+subfolder = one
 for i in range(len(subfolder)):
     filename = subfolder[i]
 
@@ -90,6 +104,7 @@ column_names = ["Filename", "Linear", "Quadratic", "Undec", "DA", "Comm"]
 column_names = ["Filename", "Linear", "Quadratic", "Undec", "DA", "Size", "Comm"]
 datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Third categorisation DxH.csv', skiprows = 1, names = column_names)
 datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\First categorisation DxH2.csv', skiprows = 1, names = column_names)
+datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Detailed categorisation DxH + DxH2.csv', skiprows = 1, names = column_names)
 
 ##%%
 
@@ -102,7 +117,7 @@ datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\C
 #
 filename_list = []
 for i in range(len(datasets)):
-    if datasets.Size[i] == 1:
+    if datasets.Size[i] == 2:
         filename_list.append(datasets.Filename[i])
 
 #file_name, lin, quad, undec, da, comm = np.loadtxt(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\First categorisation 113 systems.csv',skiprows = 1, delimiter = ',', unpack = True)
@@ -125,15 +140,15 @@ for j in range(len(subfolder_)):
     flux = data[:,1]
     error = data[:,2]
     
-    #plt.figure("Whole spectrum")
-#    plt.figure()
-#    plt.plot(wavelength,flux, label = f"{filename}")
-#    plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
-#    plt.ylabel("Flux", size = "15")
-#    plt.grid()
-#    plt.legend()
-#    plt.show()
-    ##%% # THIS IS THE PART SEPARATING THE TWO CELLS ------------------------------
+    plt.figure("Whole spectrum")
+    plt.figure()
+    plt.plot(wavelength,flux, label = f"{filename}")
+    plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+    plt.ylabel("Flux", size = "15")
+    plt.grid()
+    plt.legend()
+    plt.show()
+    #%% # THIS IS THE PART SEPARATING THE TWO CELLS ------------------------------
     """ Part 2: Performs cuts on the data to isolate the H-alpha region
     
     Notes: start/start_Ha - beginning of cut

@@ -80,13 +80,24 @@ print(df3)
 """
 Part 3: Plotting script for MWD HRD 
 """
-dist_pc = np.reciprocal(parallax)
-idx = np.where(dist_pc > 100)[0]
-dist2 = dist_pc.copy()
+dist_pc = np.reciprocal(parallax/1000)
+idx = np.where(dist_pc < 100)[0]
 #%%
-#plt.scatter(BPRP,G_abs,s=0.5)
+dist2 = [dist_pc[i] for i in idx]
+#dist2 = dist_pc.copy()
 #%%
-#plt.plot(BPRP,G_abs)
+BPRP_sel = [BPRP[i] for i in idx]
+G_sel = [G_abs[i] for i in idx]
+BPRP_sel2 = BPRP_sel.copy()
+BPRP_neg = (-1)*np.array(BPRP_sel2)
+#%%
+plt.
+plt.scatter(BPRP_sel,G_sel,s=0.1)
+#%%
+plt.figure()
+plt.gca().invert_yaxis()
+#plt.gca().invert_xaxis()
+plt.plot(BPRP_sel,G_sel,'x', markersize=0.4)
 #%%
 #i=WDJ_col[WDJ_col[1]=='WDJ005212.26+135302.04 ']
 #print(i)

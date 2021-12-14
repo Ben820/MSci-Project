@@ -90,8 +90,8 @@ dist2 = [dist_pc[i] for i in idx]
 #%%
 BPRP_sel = [BPRP[i] for i in idx]
 G_sel = [G_abs[i] for i in idx]
-BPRP_sel2 = BPRP_sel.copy()
-BPRP_neg = (-1)*np.array(BPRP_sel2)
+#BPRP_sel2 = BPRP_sel.copy()
+#BPRP_neg = (-1)*np.array(BPRP_sel2)
 ##%%
 #plt.scatter(BPRP_sel,G_sel,s=0.1)
 #%%

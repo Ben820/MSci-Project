@@ -29,7 +29,7 @@ Notes: data - MWD spectrum
        flux - y-values
 """
 #load data and sort into appropriate variables
-filename = "DESI_WDJ022723.13-055305.72_bin0p2.dat"
+filename = "DESI_WDJ111940.70+722847.58_bin0p2.dat"
 data = np.genfromtxt(f'{filename}', delimiter=' ')
 
 wavelength = data[:,0]
@@ -43,7 +43,7 @@ plt.ylabel("Flux", size = "15")
 plt.grid()
 plt.legend()
 plt.show()
-#%%
+##%%
 """ Part 2: Performs cuts on the data to isolate the H-alpha region
 
 Notes: start/start_Ha - beginning of cut
@@ -56,12 +56,12 @@ startx/endx define the specific region to be cut out (the absorption feature) ""
 
 begin = 5400
 finish = 7800
-start1 = 5800
-end1 = 6300
-start2 = 6430
+start1 = 6215
+end1 = 6400
+start2 = 6500
 end2 = 6600
-start3 = 6800
-end3 = 7050
+start3 = 6715
+end3 = 6850
 
 
 start_Ha = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-begin)))[0])

@@ -2,13 +2,6 @@
 """
 Created on Fri Nov 19 15:40:04 2021
 
-@author: 44743
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct  5 13:31:08 2021
-
 Directories: 
     Users\44743\Documents\Imperial Year 4\MSci Project\DESI_DxH\DESI_DxH
     
@@ -30,25 +23,26 @@ import glob
 import os
 import pandas as pd
 #%%
-""" Part 1: Load data
+""" 
+This scans through the files in a folder and can perform all the operations
+on these files. 
+   
+Use this to scan through files and identify linear vs quadratic --
+Put that data in Excel spreadsheet and then read that in later 
 
-Notes: data - MWD spectrum
-       wavelength - x-values 
-       flux - y-values
-       
-       This scans through the files in a folder and can perform all the operations
-       on these files. 
-       
-       Use this to scan through files and identify linear vs quadratic --
-       Put that data in Excel spreadsheet and then read that in later 
+data - MWD spectrum
+wavelength - x-values 
+flux - y-values 
 """
 
+# List of relevant directories 
 # C:\Users\44743\Documents\Imperial Year 4\MSci Project\DESI_DxH\DESI_DxH
-entries = os.listdir()
+#C:\Users\44743\Documents\Imperial Year 4\MSci Project\DESI_DxH_2\DESI_DxH_2\DAT files
+#C:\Users\44743\Documents\Imperial Year 4\MSci Project\Combined dataset
+
+files = os.listdir()
 # C:\Users\44743\Documents\Imperial Year 4\MSci Project
 #entries = os.listdir('DESI_DxH\DESI_DxH')
-
-files = entries.copy()
 
 """ FOR DxH 1 ONLY!!! """
 #del files[0] #remove DA spectrum that was accidentally included
@@ -96,10 +90,14 @@ for i in range(len(subfolder)):
     plt.legend()
     plt.show()
 #%%
+""" 
+This scans through the systems in an Excel/ csv file and can perform all the operations
+on these files. 
+   
+Use this to scan through specifically linear, quadratic, narrow or broad systems  
+(now Cont vs nCont)
+"""
 #datasets = np.loadtxt('Prelim set of Linear WDs.csv',skiprows = 1, delimiter = ',', unpack = True)
-    
-column_names = ["Filename", "Linear", "Quadratic", "Undec", "DA", "Comm"]
-#datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\First categorisation 113 systems.csv', skiprows = 1, names = column_names)
 
 column_names = ["Filename", "Linear", "Quadratic", "Undec", "DA", "Size", "Comm"]
 datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Third categorisation DxH.csv', skiprows = 1, names = column_names)
@@ -117,7 +115,7 @@ datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\C
 #
 filename_list = []
 for i in range(len(datasets)):
-    if datasets.Size[i] == 2:
+    if datasets.Size[i] == 1:
         filename_list.append(datasets.Filename[i])
 
 #file_name, lin, quad, undec, da, comm = np.loadtxt(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\First categorisation 113 systems.csv',skiprows = 1, delimiter = ',', unpack = True)
@@ -129,7 +127,11 @@ four_ = filename_list[60:80]
 five_ = filename_list[80:len(filename_list)]
 
 #%% 
-subfolder_ = one_ #[1]#
+filenamelist = []
+Bvaluelist = []
+Bvalueerr = []
+
+subfolder_ = two_ #[1]#
 for j in range(len(subfolder_)):
     filename = subfolder_[j]
 
@@ -140,15 +142,15 @@ for j in range(len(subfolder_)):
     flux = data[:,1]
     error = data[:,2]
     
-    plt.figure("Whole spectrum")
-    plt.figure()
-    plt.plot(wavelength,flux, label = f"{filename}")
-    plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
-    plt.ylabel("Flux", size = "15")
-    plt.grid()
-    plt.legend()
-    plt.show()
-    #%% # THIS IS THE PART SEPARATING THE TWO CELLS ------------------------------
+#    plt.figure("Whole spectrum")
+#    plt.figure()
+#    plt.plot(wavelength,flux, label = f"{filename}")
+#    plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+#    plt.ylabel("Flux", size = "15")
+#    plt.grid()
+#    plt.legend()
+#    plt.show()
+    ##%% # THIS IS THE PART SEPARATING THE TWO CELLS ------------------------------
     """ Part 2: Performs cuts on the data to isolate the H-alpha region
     
     Notes: start/start_Ha - beginning of cut
@@ -383,7 +385,11 @@ for j in range(len(subfolder_)):
     Residuals= _3Lorentzian(xp_triplet, *popt_3lorentz)-yp_triplet
     print("Lorentzian Residual sum of squares = ", sum(np.square(Residuals)))
     
-    ##%% PLotting Cell
+    filenamelist.append(filename)
+    Bvaluelist.append(popt_3lorentz[1])
+    Bvalueerr.append(np.sqrt(np.diag(cov_3lorentz))[1])
+    
+    #%% PLotting Cell
     fig, axs = plt.subplots(2, gridspec_kw={'height_ratios': [2.5, 1]})
     fig.suptitle(f"Lorentzian fit {filename} \n B = {popt_3lorentz[1]} +/- {np.sqrt(np.diag(cov_3lorentz))[1]}", \
                  fontsize = "13")

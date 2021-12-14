@@ -43,7 +43,7 @@ Notes: data - MWD spectrum
 #DESI_WDJ112328.50+095619.35
 #DESI_WDJ112926.23+493931.89
 #DESI_WDJ165200.65+411029.96 # Quadratic regime 
-filename = "DESI_WDJ153349.03+005916.21_bin0p2.dat"
+filename = "DESI_WDJ021152.10+284609.71_bin0p2.dat"
 data = np.genfromtxt(f'{filename}', delimiter=' ')
 #DESI_WDJ110344.93+510048.61_bin0p2
 #DESI_WDJ112328.50+095619.35_bin0p2

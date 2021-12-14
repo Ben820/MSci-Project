@@ -28,24 +28,26 @@ Part 1:
 """
 hdulist = fits.open("{:s}final_catalogue_v6.fits".format("C:\Local\Akshay Laptop Backup 29Dec2019\Imperial\MSci Project\\"))
 
-data = hdulist[1].data 
-data0 = hdulist[0].data
+GFdata = hdulist[1].data 
+GFdata0 = hdulist[0].data
 
 header = hdulist[1].header
 header0 = hdulist[0].header
 
 #Extract quantities from the overarching GF catalogue
-T_eff = data['Teff'] #WD effective temperature
-log_g = data['log_g'] #WD surface gravity
-WD_name = data['WDJ_name'] #GF identifier for the WD
-G_abs = data['absG'] #the absolute Gaia magnitude for the WD
-BPRP = data['bp_rp'] #the difference between the BP and RP filters used when observing
-parallax = data['parallax'] #Gaia parallax of source
-parallax_err = data['parallax_error'] #error on the parralax of the source
-bp_flux = data['phot_bp_mean_flux']
-rp_flux = data['phot_rp_mean_flux']
-bp_flux_err = data['phot_bp_mean_flux_error']
-rp_flux_err = data['phot_rp_mean_flux_error']
+T_eff = GFdata['Teff'] #WD effective temperature
+log_g = GFdata['log_g'] #WD surface gravity
+WD_name = GFdata['WDJ_name'] #GF identifier for the WD
+G_abs = GFdata['absG'] #the absolute Gaia magnitude for the WD
+BPRP = GFdata['bp_rp'] #the difference between the BP and RP filters used when observing
+parallax = GFdata['parallax'] #Gaia parallax of source
+parallax_err = GFdata['parallax_error'] #error on the parralax of the source
+SN = GFdata['S/N'] #signal to noise
+bp_flux = GFdata['phot_bp_mean_flux']
+rp_flux = GFdata['phot_rp_mean_flux']
+bp_flux_err = GFdata['phot_bp_mean_flux_error']
+rp_flux_err = GFdata['phot_rp_mean_flux_error']
+
 #%%
 """
 Part 2:
@@ -53,8 +55,8 @@ Part 2:
     Process the data to remove NaN values (wherever there is a NaN for T_eff there is a NaN for log_g)
     Tweak the formatting of the data to make it more suitable for our analysis
 """
-names = ["G_abs", "BP-RP", "Parallax", "T_eff", "log_g"]
-info_df = pd.DataFrame(np.array([G_abs, BPRP, parallax, T_eff, log_g]).transpose(), WD_name, columns=names)
+names = ["G_abs", "BP-RP", "Parallax", "T_eff", "log_g", "SN"]
+info_df = pd.DataFrame(np.array([G_abs, BPRP, parallax, T_eff, log_g, SN]).transpose(), WD_name, columns=names)
 
 nans = info_df[info_df['T_eff'].isna()]
 
@@ -90,16 +92,60 @@ BPRP_sel = [BPRP[i] for i in idx]
 G_sel = [G_abs[i] for i in idx]
 BPRP_sel2 = BPRP_sel.copy()
 BPRP_neg = (-1)*np.array(BPRP_sel2)
-#%%
-plt.
-plt.scatter(BPRP_sel,G_sel,s=0.1)
+##%%
+#plt.scatter(BPRP_sel,G_sel,s=0.1)
 #%%
 plt.figure()
 plt.gca().invert_yaxis()
+plt.xlabel('BP-RP')
+plt.ylabel('G_abs')
 #plt.gca().invert_xaxis()
-plt.plot(BPRP_sel,G_sel,'x', markersize=0.4)
+plt.plot(BPRP_sel,G_sel,'o', markersize=0.25)
 #%%
-#i=WDJ_col[WDJ_col[1]=='WDJ005212.26+135302.04 ']
-#print(i)
-#print(type(header))
-#print(header)
+filename = "DESI_WDJ172329.14+540755.79_bin0p2.dat"
+data = np.genfromtxt(f'{filename}', delimiter=' ')
+wavelength = data[:,0]
+flux = data[:,1]
+error = data[:,2]
+plt.figure("Whole spectrum")
+plt.plot(wavelength,flux, label = f"{filename}")
+plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+plt.ylabel("Flux", size = "15")
+plt.grid()
+plt.legend()
+plt.show()
+#%%
+info_trial = ['WDJ172329.14+540755.79 ']
+df_trial = dataset[dataset['WDJ Name'].isin(info_trial)]
+print(df_trial)
+#%%
+T_val = df_trial.iloc[0]['T_eff']
+log_g_val = df_trial.iloc[0]['log_g']
+G_abs_val = df_trial.iloc[0]['G_abs']
+parallax_val = df_trial.iloc[0]['Parallax']
+SN_val = df_trial.iloc[0]['SN']
+BPRP_val = df_trial.iloc[0]['BP-RP']
+name_val = info_trial[0]
+print(T_val)
+#%%
+textstr = "\n".join((
+    'Name: %s' % (name_val),
+    'G = %2f' % (G_abs_val, ),
+    'S/N = %2f' % (SN_val, ),
+    'Parallax = %2f' % (parallax_val, ),
+    'T_eff = %2f' % (T_val, ),
+    'log_g = %2f' % (log_g_val, )))
+#%%
+f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [2, 1]})
+a0.set_xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+a0.set_ylabel("Flux", size = "15")
+a0.plot(wavelength, flux, label = f"{filename}")
+a1.invert_yaxis()
+a1.set_xlabel('BP-RP')
+a1.set_ylabel('G_abs')
+a1.plot(BPRP_sel,G_sel,'o', markersize=0.25)
+a1.plot(BPRP_val,G_abs_val,'o',color='red',markersize=5)
+props = dict(boxstyle='round', alpha=0.5)
+a1.text(0.05, 0.05, textstr, transform=a1.transAxes, fontsize=9,
+        verticalalignment='bottom', bbox=props)
+#f.tight_layout()

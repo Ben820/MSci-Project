@@ -22,8 +22,57 @@ import pylab
 import glob
 import os
 import pandas as pd
+import re
+import astropy.io.fits as fits
 #%%
-""" 
+"""
+Part 1:
+    Open and read the GF FITS file
+    Extract quantities from the FITS file
+"""
+hdulist = fits.open("{:s}final_catalogue_v6.fits".format("C:\Local\Akshay Laptop Backup 29Dec2019\Imperial\MSci Project\\"))
+
+GFdata = hdulist[1].data 
+GFdata0 = hdulist[0].data
+
+header = hdulist[1].header
+header0 = hdulist[0].header
+
+#Extract quantities from the overarching GF catalogue
+T_eff = GFdata['Teff'] #WD effective temperature
+log_g = GFdata['log_g'] #WD surface gravity
+WD_name = GFdata['WDJ_name'] #GF identifier for the WD
+G_abs = GFdata['absG'] #the absolute Gaia magnitude for the WD
+BPRP = GFdata['bp_rp'] #the difference between the BP and RP filters used when observing
+parallax = GFdata['parallax'] #Gaia parallax of source
+parallax_err = GFdata['parallax_error'] #error on the parralax of the source
+SN = GFdata['S/N'] #signal to noise
+#%%
+"""
+Part 2:
+    Compile all the quantities which will be used to characterise the DESI MWDs into one Pandas dataframe
+    Process the data to remove NaN values (wherever there is a NaN for T_eff there is a NaN for log_g)
+    Tweak the formatting of the data to make it more suitable for our analysis
+"""
+names = ["G_abs", "BP-RP", "Parallax", "T_eff", "log_g"]
+info_df = pd.DataFrame(np.array([G_abs, BPRP, parallax, T_eff, log_g]).transpose(), WD_name, columns=names)
+
+nans = info_df[info_df['T_eff'].isna()]
+
+dataset = info_df.dropna().reset_index()
+dataset = dataset.rename(columns={"index": "WDJ Name"}) #relabel the relic column header from the original dataframe
+
+"""
+Part 3: Plotting variables for MWD HRD 
+"""
+dist_pc = np.reciprocal(parallax/1000)
+idx = np.where(dist_pc < 100)[0]
+dist2 = [dist_pc[i] for i in idx]
+BPRP_sel = [BPRP[i] for i in idx] #selected BPRP values based on the 100pc cut
+G_sel = [G_abs[i] for i in idx] #selected G_abs values based on the 100pc cut
+
+#%%
+"""
 This scans through the files in a folder and can perform all the operations
 on these files. 
    
@@ -44,7 +93,7 @@ files = os.listdir()
 # C:\Users\44743\Documents\Imperial Year 4\MSci Project
 #entries = os.listdir('DESI_DxH\DESI_DxH')
 
-""" FOR DxH 1 ONLY!!! """
+#FOR DxH 1 ONLY!!!
 #del files[0] #remove DA spectrum that was accidentally included
 #del files[113:114] #remove other .py files in this directory
 
@@ -56,7 +105,7 @@ three = files[40:60]
 four = files[60:80]
 five = files[80:100]
 six = files[100:len(files)]
-
+#%%
 # Specifically for \Combined dataset filepath
 one = files[0:20]
 two = files[20:40]
@@ -73,7 +122,6 @@ eleven= files[200:len(files)]
 subfolder = one
 for i in range(len(subfolder)):
     filename = subfolder[i]
-
     #filename = "DESI_WDJ001321.07+282019.83_bin0p2.dat"
     data = np.genfromtxt(f'{filename}', delimiter=' ')
     
@@ -81,14 +129,17 @@ for i in range(len(subfolder)):
     flux = data[:,1]
     error = data[:,2]
     
+    
 #    plt.figure("Whole spectrum")
-    plt.figure()
-    plt.errorbar(wavelength,flux, yerr = error, label = f"{filename}")
-    plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
-    plt.ylabel("Flux", size = "15")
-    plt.grid()
-    plt.legend()
-    plt.show()
+#    plt.figure()
+#    plt.errorbar(wavelength,flux, yerr = error, label = f"{filename}")
+#    plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+#    plt.ylabel("Flux", size = "15")
+#    plt.grid()
+#    plt.legend()
+#    plt.show()
+    
+
 #%%
 """ 
 This scans through the systems in an Excel/ csv file and can perform all the operations
@@ -100,9 +151,9 @@ Use this to scan through specifically linear, quadratic, narrow or broad systems
 #datasets = np.loadtxt('Prelim set of Linear WDs.csv',skiprows = 1, delimiter = ',', unpack = True)
 
 column_names = ["Filename", "Linear", "Quadratic", "Undec", "DA", "Size", "Comm"]
-datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Third categorisation DxH.csv', skiprows = 1, names = column_names)
-datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\First categorisation DxH2.csv', skiprows = 1, names = column_names)
-datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Detailed categorisation DxH + DxH2.csv', skiprows = 1, names = column_names)
+#datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Third categorisation DxH.csv', skiprows = 1, names = column_names)
+#datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\First categorisation DxH2.csv', skiprows = 1, names = column_names)
+datasets = pd.read_csv(r'C:\Local\Akshay Laptop Backup 29Dec2019\Imperial\MSci Project\DESI\DESI_DxH\DESI_DxH\Detailed categorisation DxH + DxH2.csv', skiprows = 1, names = column_names)
 
 ##%%
 
@@ -126,15 +177,87 @@ three_ = filename_list[40:60]
 four_ = filename_list[60:80]
 five_ = filename_list[80:len(filename_list)]
 
+my_path = os.path.abspath(__file__) # Figures out the absolute path for you in case your working directory moves around.
+
+my_file = 'graph.png'
+subfolder_ = one_ #[1]#
+for j in range(len(subfolder_)):
+    filename = subfolder_[j]#
+   
+    #filename = "DESI_WDJ153349.03+005916.21_bin0p2.dat"
+    data = np.genfromtxt(f'{filename}', delimiter=' ')
+    
+    wavelength = data[:,0]
+    flux = data[:,1]
+    error = data[:,2]
+    
+    mu = flux.mean()
+    sigma = flux.std()
+    max_flux = mu + 3*sigma
+
+    file_noend = re.sub('_bin0p2.dat', '', filename) #remove the end of the filename string i.e. the '_bin0p2.dat' part
+    file_nostart = re.sub('DESI_', '', file_noend) #remove the start of the filename string i.e. the 'DESI_' part
+    WDID = [file_nostart.ljust(len(file_nostart)+1)] #save the result into a list that will be used for GF cross-referencing
+    df_WDID = dataset[dataset['WDJ Name'].isin(WDID)] #extract a one-row dataframe that contains all the GF info for the WD currently in use
+    print(WDID)
+    print(df_WDID)
+    """
+    Extract key properties from the GF catalogue about the WD currently in use and put them into a string
+    """
+    T_val = df_WDID.iloc[0]['T_eff']
+    log_g_val = df_WDID.iloc[0]['log_g']
+    G_abs_val = df_WDID.iloc[0]['G_abs']
+    parallax_val = df_WDID.iloc[0]['Parallax']
+    BPRP_val = df_WDID.iloc[0]['BP-RP']
+    name_val = WDID[0]
+    
+    textstr = "\n".join((
+    'Name: %s' % (name_val),
+    'G_abs = %2f' % (G_abs_val, ),
+    'Parallax = %2f' % (parallax_val, ),
+    'T_eff = %2f' % (T_val, ),
+    'log_g = %2f' % (log_g_val, )))
+    
+    #fig = plt.figure()
+    f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [2, 1]})
+    #manager.resize(*manager.window.maxsize())
+    #manager.frame.Maximize(True)
+    a0.set_xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+    a0.set_ylabel("Flux", size = "15")
+    a0.set_ylim(bottom=None,top=max_flux)
+    a0.plot(wavelength, flux, label = f"{filename}")
+    a1.invert_yaxis()
+    a1.set_xlabel('BP-RP')
+    a1.set_ylabel('G_abs')
+    a1.plot(BPRP_sel,G_sel,'o', markersize=0.25)
+    a1.plot(BPRP_val,G_abs_val,'o',color='red',markersize=5)
+    props = dict(boxstyle='round', alpha=0.5)
+    a1.text(0.05, 0.05, textstr, transform=a1.transAxes, fontsize=9,
+            verticalalignment='bottom', bbox=props)
+#    plot_backend = plt.get_backend()
+#    mng = plt.get_current_fig_manager()
+#    mng.full_screen_toggle()
+#    if plot_backend == 'TkAgg':
+#        mng.resize(*mng.window.maxsize())
+#    elif plot_backend == 'wxAgg':
+#        mng.frame.Maximize(True)
+#    elif plot_backend == 'Qt4Agg':
+#        mng.window.showMaximized()
+#    manager = plt.get_current_fig_manager()
+#    manager.window.showMaximized()
+    figure = plt.gcf()
+    figure.set_size_inches(20, 10)
+    plt.savefig('Combined Plots/'+f'{filename}'+'.png',bbox_inches='tight')
+    
 #%% 
 filenamelist = []
 Bvaluelist = []
 Bvalueerr = []
 
-subfolder_ = two_ #[1]#
+subfolder_ = one_ #[1]#
 for j in range(len(subfolder_)):
-    filename = subfolder_[j]
-
+    filename = subfolder_[j]#
+   
     #filename = "DESI_WDJ153349.03+005916.21_bin0p2.dat"
     data = np.genfromtxt(f'{filename}', delimiter=' ')
     
@@ -389,7 +512,8 @@ for j in range(len(subfolder_)):
     Bvaluelist.append(popt_3lorentz[1])
     Bvalueerr.append(np.sqrt(np.diag(cov_3lorentz))[1])
     
-    #%% PLotting Cell
+    #%% PLotting Cell  
+    
     fig, axs = plt.subplots(2, gridspec_kw={'height_ratios': [2.5, 1]})
     fig.suptitle(f"Lorentzian fit {filename} \n B = {popt_3lorentz[1]} +/- {np.sqrt(np.diag(cov_3lorentz))[1]}", \
                  fontsize = "13")

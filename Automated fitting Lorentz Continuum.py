@@ -250,6 +250,8 @@ popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet
 for c in zip(popt_3lorentz, np.sqrt(np.diag(cov_3lorentz))):
     print("%.8f pm %.3g" % (c[0], c[1]))
 
+print(popt_3lorentz[1], 'pm', np.sqrt(np.diag(cov_3lorentz))[1])
+
 Residuals= _3Lorentzian(xp_triplet, *popt_3lorentz)-yp_triplet
 print("Lorentzian Residual sum of squares = ", sum(np.square(Residuals)))
 

@@ -23,9 +23,11 @@ import scipy as sp
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
+import pandas as pd
 import lmfit as lm
 import pickle
 from pathlib import Path
+
 #%%
 """ Part 1: Load data
 Notes: data - MWD spectrum
@@ -180,9 +182,14 @@ def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
 #                (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
     
     #with quad blueshift
-    return -(((amp1*wid1**2/((x-lambda_minus)**2+wid1**2))+lambda_sigma) +\
-            ((amp2*wid2**2/((x-lambda0)**2+wid2**2))+lambda_pi) +\
-            ((amp1*wid1**2/((x-lambda_plus)**2+wid1**2))+lambda_sigma))+1
+#    return -(((amp1*wid1**2/((x-lambda_minus-lambda_sigma)**2+wid1**2))) +\
+#            ((amp2*wid2**2/((x-lambda0-lambda_pi)**2+wid2**2))) +\
+#            ((amp1*wid1**2/((x-lambda_plus-lambda_sigma)**2+wid1**2))))+1
+
+    #with quad blueshift just for pi
+    return -(((amp1*wid1**2/((x-lambda_minus)**2+wid1**2))) +\
+            ((amp2*wid2**2/((x-lambda0-lambda_pi)**2+wid2**2))) +\
+            ((amp1*wid1**2/((x-lambda_plus)**2+wid1**2))))+1
 
 #def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
 #    return -((amp1*wid1**2/((x-cen1)**2+wid1**2)) +\

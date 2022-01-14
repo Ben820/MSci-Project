@@ -177,21 +177,26 @@ def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2, Q):
     A = np.square(lambda0/6564)
     C = np.square(lambda0/4101)
     delt_lam = 20.2*A*B
-    delt_quad = Q*(np.square(B))
+    delt_quad = (-1)*Q*(np.square(B))
     lambda_minus = lambda0 - delt_lam
     lambda_plus = lambda0 + delt_lam   
     lambda_pi = delt_quad
     lambda_sigma = 2*delt_quad
     
     #without quad blueshift
-    return -((amp1*wid1**2/((x-lambda_minus)**2+wid1**2)) +\
-            (amp2*wid2**2/((x-lambda0)**2+wid2**2)) +\
-                (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
+#    return -((amp1*wid1**2/((x-lambda_minus)**2+wid1**2)) +\
+#            (amp2*wid2**2/((x-lambda0)**2+wid2**2)) +\
+#                (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
     
     #with quad blueshift
 #    return -(((amp1*wid1**2/((x-lambda_minus-lambda_sigma)**2+wid1**2))) +\
 #            ((amp2*wid2**2/((x-lambda0-lambda_pi)**2+wid2**2))) +\
 #            ((amp1*wid1**2/((x-lambda_plus-lambda_sigma)**2+wid1**2))))+1
+    
+    #with quad blueshift just for pi
+    return -(((amp1*wid1**2/((x-lambda_minus)**2+wid1**2))) +\
+            ((amp2*wid2**2/((x-lambda0-lambda_pi)**2+wid2**2))) +\
+            ((amp1*wid1**2/((x-lambda_plus)**2+wid1**2))))+1
 
 #def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
 #    return -((amp1*wid1**2/((x-cen1)**2+wid1**2)) +\
@@ -199,7 +204,7 @@ def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2, Q):
 #                (amp3*wid3**2/((x-cen3)**2+wid3**2)))+1
 
 popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
-                                            p0=[6515, 25, 3, 5, 5, 5, -0.1])
+                                            p0=[6515, 30, 3, 5, 5, 5, 0.1])
 #popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
 #                                            p0=[0.8, 6525, 10, 0.8, 6565, 10, 0.8, 6600, 10]) 
 #parameters from old Lorentzian

@@ -27,6 +27,7 @@ import pandas as pd
 import lmfit as lm
 import pickle
 from pathlib import Path
+import pandas as pd
 
 #%%
 """ Part 1: Load data
@@ -70,7 +71,6 @@ start2 = 6450
 end2 = 6600
 start3 = 6850
 end3 = 7150
-
 
 start_Ha = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-begin)))[0])
 end_Ha = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-finish)))[0])
@@ -164,6 +164,10 @@ def delta_lambda(B):
 def delta_lambda2(B):
     return (4.67*10**-7)*(np.square(6562.8))*B*(1*10**6)
 
+#parameter bounds
+lower_bound = np.array([5000,0,0,0,0,0])
+upper_bound = np.array([7000,50,np.inf,30,np.inf,30])
+
 def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
 #    lambda0 = 6562.8
    
@@ -171,15 +175,16 @@ def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
     C = np.square(lambda0/4101)
     delt_lam = 20.2*A*B
     delt_quad = (-1)*(0.08125)*(C)*(np.square(B))
-    lambda_minus = lambda0 - delt_lam
-    lambda_plus = lambda0 + delt_lam   
-    lambda_pi = delt_quad
-    lambda_sigma = 2*delt_quad
-    
+    lambda_minus = lambda0 - delt_lam 
+    lambda_plus = lambda0 + delt_lam 
+    lambda0 = lambda0 + delt_quad   
+#    lambda_pi = delt_quad
+#    lambda_sigma = 2*delt_quad
+   
     #without quad blueshift
-#    return -((amp1*wid1**2/((x-lambda_minus)**2+wid1**2)) +\
-#            (amp2*wid2**2/((x-lambda0)**2+wid2**2)) +\
-#                (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
+    return -((amp1*wid1**2/((x-lambda_minus)**2+wid1**2)) +\
+            (amp2*wid2**2/((x-lambda0)**2+wid2**2)) +\
+                (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
     
     #with quad blueshift
 #    return -(((amp1*wid1**2/((x-lambda_minus-lambda_sigma)**2+wid1**2))) +\
@@ -187,9 +192,9 @@ def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
 #            ((amp1*wid1**2/((x-lambda_plus-lambda_sigma)**2+wid1**2))))+1
 
     #with quad blueshift just for pi
-    return -(((amp1*wid1**2/((x-lambda_minus)**2+wid1**2))) +\
-            ((amp2*wid2**2/((x-lambda0-lambda_pi)**2+wid2**2))) +\
-            ((amp1*wid1**2/((x-lambda_plus)**2+wid1**2))))+1
+#    return -(((amp1*wid1**2/((x-lambda_minus)**2+wid1**2))) +\
+#            ((amp2*wid2**2/((x-lambda0-lambda_pi)**2+wid2**2))) +\
+#            ((amp1*wid1**2/((x-lambda_plus)**2+wid1**2))))+1
 
 #def _3Lorentzian(x, amp1, cen1, wid1, amp2,cen2,wid2, amp3,cen3,wid3):
 #    return -((amp1*wid1**2/((x-cen1)**2+wid1**2)) +\
@@ -197,7 +202,7 @@ def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
 #                (amp3*wid3**2/((x-cen3)**2+wid3**2)))+1
 
 popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
-                                            p0=[6515, 24.5, 3, 5, 5, 5])
+                                            p0=[6562.8, 25, 3, 5, 5, 5], bounds=(lower_bound,upper_bound))
 #popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
 #                                            p0=[0.8, 6525, 10, 0.8, 6565, 10, 0.8, 6600, 10]) 
 #parameters from old Lorentzian

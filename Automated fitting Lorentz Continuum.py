@@ -29,7 +29,7 @@ Notes: data - MWD spectrum
        flux - y-values
 """
 #load data and sort into appropriate variables
-filename = "DESI_WDJ224741.46+145638.84_bin0p2.dat"
+filename = "DESI_WDJ115418.15+011711.55_bin0p2.dat"
 data = np.genfromtxt(f'{filename}', delimiter=' ')
 
 wavelength = data[:,0]
@@ -41,7 +41,7 @@ plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')
 plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
 plt.ylabel("Flux", size = "15")
 #plt.xlim(3300, 9000)
-#plt.ylim(-20,190)
+plt.ylim(-20,190)
 plt.grid()
 plt.legend()
 plt.show()
@@ -56,14 +56,14 @@ Notes: start/start_Ha - beginning of cut
 begin/ finish define the whole region including the triplet feature 
 startx/endx define the specific region to be cut out (the absorption feature) """
 
-begin = 5200
-finish = 7800
-start1 = 6400
-end1 = 6800
-start2 = 6800
-end2 = 6802
-start3 = 6803
-end3 = 6805
+begin = 5530
+finish = 7500
+start1 = 6070
+end1 = 6270
+start2 = 6400
+end2 = 6600
+start3 = 6775
+end3 = 7000
 
 
 start_Ha = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-begin)))[0])
@@ -249,6 +249,12 @@ if index3 >= len(B_list)-1:
 if Res_list[index3] >= Res_list[index3]:
     B_list[index3] = rangeBval[index3]
 
+# If indices do not match up exactly with B values --> consequence of using only B_list below 
+# Resolves the case if index3 does not correspond to the same B value in B_list and B_list2
+if Res_list[index3] >= Res_list2[index3]:
+    B_list[index3] = B_list2[index3]
+
+##%%
 # The determined B value is BACK INTO curvefit to re-estimate the final parameters of the fit 
 # NOTE THIS IS STILL ONLY THE SECOND CURVEFIT - NOTE USE OF B_list NOT! B_list2
 popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \

@@ -29,7 +29,7 @@ Notes: data - MWD spectrum
        flux - y-values
 """
 #load data and sort into appropriate variables
-filename = "DESI_WDJ111940.70+722847.58_bin0p2.dat"
+filename = "DESI_WDJ224741.46+145638.84_bin0p2.dat"
 data = np.genfromtxt(f'{filename}', delimiter=' ')
 
 wavelength = data[:,0]
@@ -40,10 +40,12 @@ plt.figure("Whole spectrum")
 plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')
 plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
 plt.ylabel("Flux", size = "15")
+#plt.xlim(3300, 9000)
+#plt.ylim(-20,190)
 plt.grid()
 plt.legend()
 plt.show()
-##%%
+#%%
 """ Part 2: Performs cuts on the data to isolate the H-alpha region
 
 Notes: start/start_Ha - beginning of cut
@@ -54,14 +56,14 @@ Notes: start/start_Ha - beginning of cut
 begin/ finish define the whole region including the triplet feature 
 startx/endx define the specific region to be cut out (the absorption feature) """
 
-begin = 5400
+begin = 5200
 finish = 7800
-start1 = 6215
-end1 = 6400
-start2 = 6500
-end2 = 6600
-start3 = 6715
-end3 = 6850
+start1 = 6400
+end1 = 6800
+start2 = 6800
+end2 = 6802
+start3 = 6803
+end3 = 6805
 
 
 start_Ha = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-begin)))[0])
@@ -240,6 +242,13 @@ index2 = np.where(Res_list2 == np.amin(Res_list2))[0][0]
 A = Res_list+Res_list2
 index3 = np.where(A == np.amin(A))[0][0]
 
+# If index3 > len(B_list) then the double iteration is preferable, and so we use index2 
+if index3 >= len(B_list)-1:
+    index3 = index2
+# If any of the initial guesses for B are the best, this will ensure these are selected 
+if Res_list[index3] >= Res_list[index3]:
+    B_list[index3] = rangeBval[index3]
+
 # The determined B value is BACK INTO curvefit to re-estimate the final parameters of the fit 
 # NOTE THIS IS STILL ONLY THE SECOND CURVEFIT - NOTE USE OF B_list NOT! B_list2
 popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
@@ -250,7 +259,7 @@ popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet
 for c in zip(popt_3lorentz, np.sqrt(np.diag(cov_3lorentz))):
     print("%.8f pm %.3g" % (c[0], c[1]))
 
-print(popt_3lorentz[1], 'pm', np.sqrt(np.diag(cov_3lorentz))[1])
+print("B = ", popt_3lorentz[1], 'pm', np.sqrt(np.diag(cov_3lorentz))[1])
 
 Residuals= _3Lorentzian(xp_triplet, *popt_3lorentz)-yp_triplet
 print("Lorentzian Residual sum of squares = ", sum(np.square(Residuals)))

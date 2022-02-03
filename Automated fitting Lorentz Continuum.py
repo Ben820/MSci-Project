@@ -29,23 +29,47 @@ Notes: data - MWD spectrum
        wavelength - x-values 
        flux - y-values
 """
+
+filenamelist = []
+Bvaluelist = []
+Bvalueerr = []
+lambdalist = []
+lambdaerrlist = []
+beginlist = []
+finishlist = []
+start1list = []
+end1list = []
+start2list = []
+end2list = []
+start3list = []
+end3list = []
+
 #load data and sort into appropriate variables
-filename = "DESI_WDJ205233.51-001610.73_bin0p2.dat"
+filename = "DESI_WDJ233621.77-082849.31_bin0p2.dat"
 data = np.genfromtxt(f'{filename}', delimiter=' ')
 
 wavelength = data[:,0]
 flux = data[:,1]
 error = data[:,2]
 
-plt.figure("Whole spectrum")
+#plt.figure("Whole spectrum")
+plt.figure()
 plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')
 plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
 plt.ylabel("Flux", size = "15")
 #plt.xlim(3300, 9000)
-plt.ylim(-20,190)
+#plt.ylim(-20,190)
 plt.grid()
 plt.legend()
 plt.show()
+#%% RUN AFTER BIG CELL (just dont want down bottom - cumbersome to edit )
+    
+tot_list = [Bvaluelist, Bvalueerr, lambdalist, lambdaerrlist, beginlist, finishlist, start1list, end1list, start2list, end2list, start3list, end3list]   
+
+aexceldata = np.zeros((len(filenamelist),len(tot_list)))
+for i in range(len(filenamelist)):
+    for j in range(0,len(tot_list)):
+        aexceldata[i][j] = tot_list[j][i]
 #%%
 """ Part 2: Performs cuts on the data to isolate the H-alpha region
 
@@ -57,14 +81,23 @@ Notes: start/start_Ha - beginning of cut
 begin/ finish define the whole region including the triplet feature 
 startx/endx define the specific region to be cut out (the absorption feature) """
 
-begin = 5200
-finish = 8000
-start1 = 6304
-end1 = 6863
-start2 = 6865
-end2 = 6867
-start3 = 6869
-end3 = 6871
+begin = 6200
+finish = 6930
+start1 = 6400
+end1 = 6750
+start2 = 8400
+end2 = 8630
+start3 = 8930
+end3 = 9380
+
+beginlist.append(begin)
+finishlist.append(finish)
+start1list.append(start1)
+end1list.append(end1)
+start2list.append(start2)
+end2list.append(end2)
+start3list.append(start3)
+end3list.append(end3)
 
 
 start_Ha = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-begin)))[0])
@@ -182,7 +215,7 @@ Res_list = []
 B_list = []
 lambda0_list = []
 
-rangeBval = np.arange(0,25,0.1)
+rangeBval = np.arange(0,50.5,0.5)
 for i in rangeBval:
     p0 = np.array([6562.8, i, 0.8, 10, 0.8, 10])
     
@@ -246,25 +279,25 @@ index3 = np.where(A == np.amin(A))[0][0]
 # If index3 > len(B_list) then the double iteration is preferable, and so we use index2 
 if index3 >= len(B_list)-1:
     index3 = index2
-# If any of the initial guesses for B are the best, this will ensure these are selected 
-if Res_list[index3] >= Res_list[index3]:
-    B_list[index3] = rangeBval[index3]
+## If any of the initial guesses for B are the best, this will ensure these are selected 
+#if Res_list[index3] >= Res_list[index3]:
+#    B_list[index3] = rangeBval[index3]
+#
+## If indices do not match up exactly with B values --> consequence of using only B_list below 
+## Resolves the case if index3 does not correspond to the same B value in B_list and B_list2
+#if Res_list[index3] >= Res_list2[index3]:
+#    B_list[index3] = B_list2[index3]
+#
+#
+###%%
+## The determined B value is BACK INTO curvefit to re-estimate the final parameters of the fit 
+## NOTE THIS IS STILL ONLY THE SECOND CURVEFIT - NOTE USE OF B_list NOT! B_list2
+#popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
+#                                            p0=[6562.8, B_list[index3], 0.8, 10, 0.8, 10], \
+#                                            sigma = err_triplet)#, \
+#                                            #bounds = ((-np.inf, 0, -np.inf, -np.inf, -np.inf, -np.inf),(np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)))
 
-# If indices do not match up exactly with B values --> consequence of using only B_list below 
-# Resolves the case if index3 does not correspond to the same B value in B_list and B_list2
-if Res_list[index3] >= Res_list2[index3]:
-    B_list[index3] = B_list2[index3]
-
-
-##%%
-# The determined B value is BACK INTO curvefit to re-estimate the final parameters of the fit 
-# NOTE THIS IS STILL ONLY THE SECOND CURVEFIT - NOTE USE OF B_list NOT! B_list2
-popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
-                                            p0=[6562.8, B_list[index3], 0.8, 10, 0.8, 10], \
-                                            sigma = err_triplet)#, \
-                                            #bounds = ((-np.inf, 0, -np.inf, -np.inf, -np.inf, -np.inf),(np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)))
-
-# In the (1 instance so far) case that the lowest residuals outright does not conform to the best fit 
+# In the (2 instance so far) case that the lowest residuals outright does not conform to the best fit 
 # This is different to the reason for B_list2 and the secod curvefit; the second curvefit is used when
 # the first curvefit does not find the correct B, so finer precision is required
 # this case is when the correct B value IS identified, but is not selected because another (wrong)
@@ -272,11 +305,11 @@ popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet
 
 print("B = ", popt_3lorentz[1], 'pm', np.sqrt(np.diag(cov_3lorentz))[1])
 
-if np.around(np.array([popt_3lorentz[1]]), 2) != Counter(np.around(np.array(B_list),4)).most_common(1)[0][0]:
-    B_list[index3] = Counter(np.around(np.array(B_list),4)).most_common(1)[0][0]
+#if np.around(np.array([popt_3lorentz[1]]), 2) != Counter(np.around(np.array(B_list),4)).most_common(1)[0][0]:
+#    B_list[index3] = Counter(np.around(np.array(B_list),4)).most_common(1)[0][0]
 
 popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
-                                            p0=[6562.8, B_list[index3], 0.8, 10, 0.8, 10], \
+                                            p0=[6562.8, B_list[4], 0.8, 10, 0.8, 10], \
                                             sigma = err_triplet)#, \
                                             #bounds = ((-np.inf, 0, -np.inf, -np.inf, -np.inf, -np.inf),(np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)))
 
@@ -287,6 +320,12 @@ print("B = ", popt_3lorentz[1], 'pm', np.sqrt(np.diag(cov_3lorentz))[1])
 
 Residuals= _3Lorentzian(xp_triplet, *popt_3lorentz)-yp_triplet
 print("Lorentzian Residual sum of squares = ", sum(np.square(Residuals)))
+
+filenamelist.append(filename)
+Bvaluelist.append(popt_3lorentz[1])
+Bvalueerr.append(np.sqrt(np.diag(cov_3lorentz))[1])
+lambdalist.append(popt_3lorentz[0])
+lambdaerrlist.append(np.sqrt(np.diag(cov_3lorentz))[0])
 
 ##%% PLotting Cell
 fig, axs = plt.subplots(2, gridspec_kw={'height_ratios': [2.5, 1]})
@@ -305,6 +344,7 @@ axs[1].set_ylabel('Flux residuals')
 axs[0].grid()
 #""" Voigt Residuals Plot """
 axs[1].plot(xp_triplet, Residuals, linewidth=2)#, label = "Lorentzian fit Residuals")
+axs[1].plot(xp_triplet, xp_triplet*0/xp_triplet, linewidth = 1)
 axs[0].legend()
 #axs[1].legend()
 axs[1].grid()

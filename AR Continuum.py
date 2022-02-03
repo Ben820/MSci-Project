@@ -55,12 +55,29 @@ for i in range(len(datasets)):
         end3_list.append(datasets.end3[i])
 
 #file_name, lin, quad, undec, da, comm = np.loadtxt(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\First categorisation 113 systems.csv',skiprows = 1, delimiter = ',', unpack = True)
-#
-one_ = [filename_list[0:10], tot__list[0:10]]
-two_ = filename_list[20:40]
-three_ = filename_list[40:60]
-four_ = filename_list[60:80]
-five_ = filename_list[80:len(filename_list)]
+""" re engineer this - has to be faster way to write this esp for 200 + systems """
+datafolder = [filename_list, tot__list[0], tot__list[1], tot__list[2], tot__list[3], tot__list[4], \
+                tot__list[5], tot__list[6], tot__list[7]]
+
+# datafolder has system name and 8 different cuts 
+# one_ etc. only contains 8 different cuts!!
+one_  = [[], [], [], [],[], [], [], [], []]
+two_  = [[], [], [], [],[], [], [], [], []]
+three_  = [[], [], [], [],[], [], [], [], []]
+four_  = [[], [], [], [],[], [], [], [], []]
+five_  = [[], [], [], [],[], [], [], [], []]
+six_  = [[], [], [], [],[], [], [], [], []]
+seven_  = [[], [], [], [],[], [], [], [], []]
+
+for i in range(len(datafolder)):
+    one_[i] = datafolder[i][0:20]
+    two_[i] = datafolder[i][20:40]
+    three_[i] = datafolder[i][40:60]
+    four_[i] = datafolder[i][60:80]
+    five_[i] = datafolder[i][80:100]
+    six_[i] = datafolder[i][100:120]
+    seven_[i] = datafolder[i][120:140]
+
 ##%% Developing cell for code to write data
 #red = [0,1,2,3,4]
 #
@@ -97,10 +114,9 @@ end2list = []
 start3list = []
 end3list = []
 
-
-subfolder_ = one_ #[1]#
-for j in range(len(subfolder_)):
-    filename = subfolder_[j]
+subfolder_ = two_ #[1]#
+for j in range(len(subfolder_[0])):
+    filename = subfolder_[0][j]
 
 
     #load data and sort into appropriate variables
@@ -140,6 +156,15 @@ for j in range(len(subfolder_)):
     end2 = 8630
     start3 = 8930
     end3 = 9380
+    
+    begin = subfolder_[1][j]
+    finish = subfolder_[2][j]
+    start1 = subfolder_[3][j]
+    end1 = subfolder_[4][j]
+    start2 = subfolder_[5][j]
+    end2 = subfolder_[6][j]
+    start3 = subfolder_[7][j]
+    end3 = subfolder_[8][j]
     
     beginlist.append(begin)
     finishlist.append(finish)
@@ -395,10 +420,12 @@ for j in range(len(subfolder_)):
     axs[0].grid()
     #""" Voigt Residuals Plot """
     axs[1].plot(xp_triplet, Residuals, linewidth=2)#, label = "Lorentzian fit Residuals")
+    axs[1].plot(xp_triplet, xp_triplet*0/xp_triplet, linewidth = 1)
     axs[0].legend()
     #axs[1].legend()
     axs[1].grid()
     #plt.savefig("Gaussian Residuals", dpi = 1000)
+    #plt.savefig(f'{filename}.png', dpi = 1000)
     plt.show()
 
 

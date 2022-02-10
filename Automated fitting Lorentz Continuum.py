@@ -45,7 +45,7 @@ start3list = []
 end3list = []
 
 #load data and sort into appropriate variables
-filename = "DESI_WDJ233621.77-082849.31_bin0p2.dat"
+filename = "DESI_WDJ163024.63+253248.53_bin0p2.dat"
 data = np.genfromtxt(f'{filename}', delimiter=' ')
 
 wavelength = data[:,0]
@@ -54,7 +54,7 @@ error = data[:,2]
 
 #plt.figure("Whole spectrum")
 plt.figure()
-plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')
+plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')#, ms = 1)
 plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
 plt.ylabel("Flux", size = "15")
 #plt.xlim(3300, 9000)
@@ -81,14 +81,14 @@ Notes: start/start_Ha - beginning of cut
 begin/ finish define the whole region including the triplet feature 
 startx/endx define the specific region to be cut out (the absorption feature) """
 
-begin = 6200
-finish = 6930
-start1 = 6400
-end1 = 6750
-start2 = 8400
-end2 = 8630
-start3 = 8930
-end3 = 9380
+begin = 6230
+finish = 6870
+start1 = 6510
+end1 = 6005
+start2 = 9000
+end2 = 9002
+start3 = 9004
+end3 = 9006
 
 beginlist.append(begin)
 finishlist.append(finish)
@@ -309,7 +309,7 @@ print("B = ", popt_3lorentz[1], 'pm', np.sqrt(np.diag(cov_3lorentz))[1])
 #    B_list[index3] = Counter(np.around(np.array(B_list),4)).most_common(1)[0][0]
 
 popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
-                                            p0=[6562.8, B_list[4], 0.8, 10, 0.8, 10], \
+                                            p0=[6562.8, B_list[index3], 0.8, 10, 0.8, 10], \
                                             sigma = err_triplet)#, \
                                             #bounds = ((-np.inf, 0, -np.inf, -np.inf, -np.inf, -np.inf),(np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)))
 

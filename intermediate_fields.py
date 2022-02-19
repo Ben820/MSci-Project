@@ -17,7 +17,7 @@ import glob
 import os
 import pandas as pd 
 import re
-
+""" NEED TO RUN hydrogen_transitions_v2.py BEFORE RUNNING ANY CODE IN THIS FILE"""
 
 #%%
 """ Part 1: Load data

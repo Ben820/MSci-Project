@@ -28,8 +28,9 @@ gaia_data = pd.read_csv('Gaia catalogue.csv')
 IM_fields_data = pd.read_csv('IM fields input table.csv')
 linear_fields_data = pd.read_csv('Low-field Linear Systems_poster.csv')
 linear_just_fields = pd.read_csv('Low-field Linear Systems_poster_2.csv')
+high_fields_data = pd.read_csv('HF and extra.csv')
 IM_just_fields = pd.read_csv('IM fields input table_2.csv')
-frames = [linear_just_fields, IM_just_fields]
+frames = [linear_just_fields, IM_just_fields, high_fields_data]
 df_concat = pd.concat(frames)
 #%%
 """
@@ -48,7 +49,8 @@ Cell that plots a histogram of MWD field vs number
 """
 linear_x_array = linear_fields_data[linear_fields_data.columns[2]].to_numpy()
 IM_x_array = IM_fields_data[IM_fields_data.columns[1]].to_numpy()
-combined_fields = np.concatenate((linear_x_array, IM_x_array)) 
+HF_x_array = high_fields_data[high_fields_data.columns[1]].to_numpy()
+combined_fields = np.concatenate((linear_x_array, IM_x_array, HF_x_array)) 
 plt.figure()
 plt.xlabel('MWD Field Strength' + ' (MG)')
 plt.ylabel('Number of MWDs')

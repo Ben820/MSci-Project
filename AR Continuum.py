@@ -25,7 +25,7 @@ from collections import Counter
 #%%
 column_names = ["Filename", "Class", "B alpha", "B error alpha", "lambda0", "lambda0 error", "begin", "finish", "start1", "end1", "start2", "end2", "start3", "end3", "Notes"]
 cut_regions = ["begin", "finish", "start1", "end1", "start2", "end2", "start3", "end3"]
-datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Detailed class catalogue.csv', skiprows = 1, names = column_names)
+datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Detailed class catalogue 2.csv', skiprows = 1, names = column_names)
 filename_list = []
 #tot_list_ = []
 
@@ -38,10 +38,10 @@ end2_list = []
 start3_list = []
 end3_list = []
 
-tot__list = [begin_list, finish_list, start1_list, end1_list, start2_list, end2_list, start3_list, end3_list]   
+cut_regions = [begin_list, finish_list, start1_list, end1_list, start2_list, end2_list, start3_list, end3_list]   
 
 for i in range(len(datasets)):
-    if datasets.Class[i] == 1:
+    if datasets.Class[i] == 1:# or datasets.Class[i] == 2 or datasets.Class[i] == 3 or datasets.Class[i] == 4:
         filename_list.append(datasets.Filename[i])
 #        for j in range(len(cut_regions)):
 #            tot__list[j].append(datasets.begin[j])
@@ -56,28 +56,37 @@ for i in range(len(datasets)):
 
 #file_name, lin, quad, undec, da, comm = np.loadtxt(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\First categorisation 113 systems.csv',skiprows = 1, delimiter = ',', unpack = True)
 """ re engineer this - has to be faster way to write this esp for 200 + systems """
-datafolder = [filename_list, tot__list[0], tot__list[1], tot__list[2], tot__list[3], tot__list[4], \
-                tot__list[5], tot__list[6], tot__list[7]]
-
+datafolder = [filename_list, cut_regions[0], cut_regions[1], cut_regions[2], cut_regions[3], cut_regions[4], \
+                cut_regions[5], cut_regions[6], cut_regions[7]]
+##%%
 # datafolder has system name and 8 different cuts 
 # one_ etc. only contains 8 different cuts!!
-one_  = [[], [], [], [],[], [], [], [], []]
-two_  = [[], [], [], [],[], [], [], [], []]
-three_  = [[], [], [], [],[], [], [], [], []]
-four_  = [[], [], [], [],[], [], [], [], []]
-five_  = [[], [], [], [],[], [], [], [], []]
-six_  = [[], [], [], [],[], [], [], [], []]
-seven_  = [[], [], [], [],[], [], [], [], []]
+number_sections = 11
 
-for i in range(len(datafolder)):
-    one_[i] = datafolder[i][0:20]
-    two_[i] = datafolder[i][20:40]
-    three_[i] = datafolder[i][40:60]
-    four_[i] = datafolder[i][60:80]
-    five_[i] = datafolder[i][80:100]
-    six_[i] = datafolder[i][100:120]
-    seven_[i] = datafolder[i][120:140]
+subsections = [[[] for i in range(0, len(datafolder))] for i in range(number_sections)]
+#one_  = [[], [], [], [],[], [], [], [], []]
+#two_  = [[], [], [], [],[], [], [], [], []]
+#three_  = [[], [], [], [],[], [], [], [], []]
+#four_  = [[], [], [], [],[], [], [], [], []]
+#five_  = [[], [], [], [],[], [], [], [], []]
+#six_  = [[], [], [], [],[], [], [], [], []]
+#seven_  = [[], [], [], [],[], [], [], [], []]
+#
+#for i in range(len(datafolder)):
+#    one_[i] = datafolder[i][0:20]
+#    two_[i] = datafolder[i][20:40]
+#    three_[i] = datafolder[i][40:60]
+#    four_[i] = datafolder[i][60:80]
+#    five_[i] = datafolder[i][80:100]
+#    six_[i] = datafolder[i][100:120]
+#    seven_[i] = datafolder[i][120:140]
 
+intervals = [0]
+[intervals.append(intervals[i]+20) for i in range(0,number_sections)]
+
+for i in range(0,number_sections):
+    for j in range(0,len(datafolder)):
+        subsections[i][j] = datafolder[j][intervals[i]:intervals[i+1]]
 ##%% Developing cell for code to write data
 #red = [0,1,2,3,4]
 #
@@ -114,8 +123,8 @@ end2list = []
 start3list = []
 end3list = []
 
-subfolder_ = two_ #[1]#
-for j in range(len(subfolder_[0])):
+subfolder_ = subsections[0] #one_ #[1]#
+for j in range(len(subfolder_[0][0:1])):
     filename = subfolder_[0][j]
 
 
@@ -128,15 +137,15 @@ for j in range(len(subfolder_[0])):
     error = data[:,2]
     
     #plt.figure("Whole spectrum")
-#    plt.figure()
-#    plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')
-#    plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
-#    plt.ylabel("Flux", size = "15")
-#    #plt.xlim(3300, 9000)
-#    plt.ylim(-20,190)
-#    plt.grid()
-#    plt.legend()
-#    plt.show()
+    plt.figure()
+    plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')
+    plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+    plt.ylabel("Flux", size = "15")
+    #plt.xlim(3300, 9000)
+    #plt.ylim(-20,190)
+    plt.grid()
+    plt.legend()
+    plt.show()
     ##%%
     """ Part 2: Performs cuts on the data to isolate the H-alpha region
     
@@ -267,13 +276,16 @@ for j in range(len(subfolder_[0])):
     
     # DEFINE ANOTHER FUNCTION HERE 
     # Zeeman splitting - returns delta_lambda 
-    def delta_lambda(B):
-        A = np.square(6562.8/6564)
-        y = 20.2*A*B
-        return y 
+#    def delta_lambda(B):
+#        A = np.square(6562.8/6564)
+#        y = 20.2*A*B
+#        return y 
+#    
+#    def delta_lambda2(B):
+#        return (4.67*10**-7)*(np.square(6562.8))*B*(1*10**6)
     
-    def delta_lambda2(B):
-        return (4.67*10**-7)*(np.square(6562.8))*B*(1*10**6)
+    ### SEE WIKI: 'In physics, a three-parameter Lorentzian function is often used'
+    # wid = gamma and FWHM = 2*gamma
     
     def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
     #    lambda0 = 6562.8

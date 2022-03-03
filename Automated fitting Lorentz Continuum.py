@@ -45,7 +45,7 @@ start3list = []
 end3list = []
 
 #load data and sort into appropriate variables
-filename = "DESI_WDJ163024.63+253248.53_bin0p2.dat"
+filename = "DESI_WDJ015013.09+283556.31_bin0p2.dat"
 data = np.genfromtxt(f'{filename}', delimiter=' ')
 
 wavelength = data[:,0]
@@ -54,22 +54,32 @@ error = data[:,2]
 
 #plt.figure("Whole spectrum")
 plt.figure()
-plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')#, ms = 1)
+plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='', color='darkblue')#, ms = 1)
 plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
 plt.ylabel("Flux", size = "15")
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+
 #plt.xlim(3300, 9000)
 #plt.ylim(-20,190)
 plt.grid()
-plt.legend()
+#plt.legend()
 plt.show()
 #%% RUN AFTER BIG CELL (just dont want down bottom - cumbersome to edit )
     
-tot_list = [Bvaluelist, Bvalueerr, lambdalist, lambdaerrlist, beginlist, finishlist, start1list, end1list, start2list, end2list, start3list, end3list]   
+#tot_list = [Bvaluelist, Bvalueerr, lambdalist, lambdaerrlist, beginlist, finishlist, start1list, end1list, start2list, end2list, start3list, end3list]   
+#
+#aexceldata = np.zeros((len(filenamelist),len(tot_list)))
+#for i in range(len(filenamelist)):
+#    for j in range(0,len(tot_list)):
+#        aexceldata[i][j] = tot_list[j][i]
+#
+##%%
+aexceldata = np.zeros((len(filenamelist),len(datalist)))
 
-aexceldata = np.zeros((len(filenamelist),len(tot_list)))
-for i in range(len(filenamelist)):
-    for j in range(0,len(tot_list)):
-        aexceldata[i][j] = tot_list[j][i]
+for i in range(0, len(datalist)):
+    aexceldata[:,i] = datalist[i]
+
 #%%
 """ Part 2: Performs cuts on the data to isolate the H-alpha region
 
@@ -81,23 +91,23 @@ Notes: start/start_Ha - beginning of cut
 begin/ finish define the whole region including the triplet feature 
 startx/endx define the specific region to be cut out (the absorption feature) """
 
-begin = 6230
-finish = 6870
-start1 = 6510
-end1 = 6005
-start2 = 9000
-end2 = 9002
-start3 = 9004
-end3 = 9006
+begin = 5200
+finish = 8000
+start1 = 6460
+end1 = 6715
+start2 = 6717
+end2 = 6719
+start3 = 6721
+end3 = 6723
 
-beginlist.append(begin)
-finishlist.append(finish)
-start1list.append(start1)
-end1list.append(end1)
-start2list.append(start2)
-end2list.append(end2)
-start3list.append(start3)
-end3list.append(end3)
+#beginlist.append(begin)
+#finishlist.append(finish)
+#start1list.append(start1)
+#end1list.append(end1)
+#start2list.append(start2)
+#end2list.append(end2)
+#start3list.append(start3)
+#end3list.append(end3)
 
 
 start_Ha = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-begin)))[0])

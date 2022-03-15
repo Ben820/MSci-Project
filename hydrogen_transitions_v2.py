@@ -83,8 +83,8 @@ for i in range(len(beta_array)):
     b_beta_list.append((transitions_df.loc[beta_array[i]+2:end_beta_array[i],'Bfield']).to_numpy().astype(float))
     #wavelength and B-field arrays for all the H-beta transitions
 #%%   
-labels_alpha = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n']
-labels_beta = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17']
+labels_alpha = ['1a','2a','3a','4a','5a','6a','7a','8a','9a','10a','11a','12a','13a','14a']
+labels_beta = ['1b','2b','3b','4b','5b','6b','7b','8b','9b','10b','11b','12b','13b','14b','15b','16b','17b']
 labels_combined = labels_alpha + labels_beta   
 
 plt.figure()
@@ -92,19 +92,15 @@ plt.grid()
 plt.xlabel('Wavelength $[\AA]$')
 plt.ylabel('B [G]')
 for i in range(len(alpha_array)):
-    plt.plot(wavelength_alpha_list[i],b_alpha_list[i], '--')
+    plt.plot(wavelength_alpha_list[i],b_alpha_list[i], '--', label=labels_alpha[i])
 for i in range(len(alpha_array)):
     plt.plot(wavelength_alpha_list[i],b_alpha_list[i],'x')
-# =============================================================================
-# for i in range(len(beta_array)):
-#     plt.plot(wavelength_beta_list[i],b_beta_list[i])
-# for i in range(len(beta_array)):
-#     plt.plot(wavelength_beta_list[i],b_beta_list[i],'x')
-# =============================================================================
-    
-plt.legend(labels=labels_alpha)
-#plt.legend(labels=labels_beta)
-#plt.legend(labels=labels_combined)
+for i in range(len(beta_array)):
+    plt.plot(wavelength_beta_list[i],b_beta_list[i], label=labels_beta[i])
+for i in range(len(beta_array)):
+    plt.plot(wavelength_beta_list[i],b_beta_list[i],'x')
+
+plt.legend()    
 #plt.yscale('log')
 plt.show()
 
@@ -114,19 +110,20 @@ plt.grid()
 plt.xlabel('B [G]')
 plt.ylabel('Wavelength $[\AA]$')
 for i in range(len(alpha_array)):
-    plt.plot(b_alpha_list[i],wavelength_alpha_list[i],'--')
+    plt.plot(b_alpha_list[i],wavelength_alpha_list[i],'--', label=labels_alpha[i])
 for i in range(len(alpha_array)):
     plt.plot(b_alpha_list[i],wavelength_alpha_list[i],'x')
+for i in range(len(beta_array)):
+    plt.plot(b_beta_list[i],wavelength_beta_list[i], label=labels_beta[i])
+for i in range(len(beta_array)):
+    plt.plot(b_beta_list[i],wavelength_beta_list[i],'x')
+
+plt.legend()
 # =============================================================================
-# for i in range(len(beta_array)):
-#     plt.plot(b_beta_list[i],wavelength_beta_list[i])
-# for i in range(len(beta_array)):
-#     plt.plot(b_beta_list[i],wavelength_beta_list[i],'x')
+# plt.legend(labels=labels_alpha)
+# plt.legend(labels=labels_beta)
+# plt.legend(labels=labels_combined)
 # =============================================================================
-    
-plt.legend(labels=labels_alpha)
-#plt.legend(labels=labels_beta)
-#plt.legend(labels=labels_combined)
 #plt.yscale('log')
 plt.show()
 

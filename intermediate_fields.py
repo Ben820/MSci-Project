@@ -17,7 +17,70 @@ import glob
 import os
 import pandas as pd 
 import re
-""" NEED TO RUN hydrogen_transitions_v2.py BEFORE RUNNING ANY CODE IN THIS FILE"""
+#%%
+column_names = ['NumDataPoints', 'Bfield', 'Wavelength', 'Final State']
+transitions_df = pd.read_csv(r'C:\Local\Akshay Laptop Backup 29Dec2019\Imperial\MSci Project\DESI\hydrogencolumns.csv', skiprows=1, names=column_names)
+notnan = transitions_df['NumDataPoints'].notnull()
+
+transitions_alpha = [['2p-1','3s0'], ['2s0','3p+1'],['2p+1','3d+2'],['2p0','3d+1'], \
+               ['2p-1','3d0'],['2p0','3s0'],['2p-1','3d-1'],['2s0','3p0'], \
+               ['2p0','3d0'],['2p+1','3s0'],['2s0','3p-1'],['2p-1','3d-2'], \
+               ['2p0','3d-1'],['2p+1','3d0']] #H-alpha transitions
+alpha_list = []
+
+for trans in transitions_alpha:
+    alpha_list.append(transitions_df[(transitions_df['Bfield']  == trans[0]) & \
+                 (transitions_df['Final State'] == trans[1])].index.tolist())
+    #indices of the H-alpha transitions (start of the list)
+    
+num_list=[]
+for alpha in alpha_list:
+    num_list.append( np.int(transitions_df.iloc[ alpha[0] ].iloc[0]) )
+    #Number of data points in each transition
+    
+alpha_list = [i[0] for i in alpha_list]
+alpha_array = np.array(alpha_list)
+num_alpha_array = np.array(num_list) 
+end_alpha_array = alpha_array + num_alpha_array #end index of data describing a Halpha transition
+
+wavelength_alpha_list = []
+b_alpha_list = []
+
+
+for i in range(len(alpha_array)):
+    wavelength_alpha_list.append((transitions_df.loc[alpha_array[i]+2:end_alpha_array[i],'Wavelength']).to_numpy().astype(float))
+    b_alpha_list.append((transitions_df.loc[alpha_array[i]+2:end_alpha_array[i],'Bfield']).to_numpy().astype(float))
+    #wavelength and B-field arrays for all the Halpha transitions
+
+transitions_beta = [['2p-1','4s0'],['2s0','4p+1'],['2p+1','4d+2'],['2p0','4d+1'], \
+               ['2s0','4f+1'],['2p-1','4d0'],['2p0','4s0'],['2p-1','4d-1'],['2s0','4p0'], \
+               ['2p0','4d0'],['2s0','4f0'],['2p+1','4s0'],['2s0','4p-1'],['2p-1','4d-2'], \
+               ['2p0','4d-1'],['2s0','4f-1'],['2p+1','3d0']] #H-beta transitions
+beta_list = []
+
+for trans in transitions_beta:
+    beta_list.append(transitions_df[(transitions_df['Bfield']  == trans[0]) & \
+                 (transitions_df['Final State'] == trans[1])].index.tolist())
+    #indices of the H-beta transitions (start of the list)
+    
+num_beta_list=[]
+for beta in beta_list:
+    num_beta_list.append( np.int(transitions_df.iloc[ beta[0] ].iloc[0]) )
+    #Number of data points in each transition
+    
+beta_list = [i[0] for i in beta_list]
+beta_array = np.array(beta_list)
+num_beta_array = np.array(num_beta_list) 
+end_beta_array = beta_array + num_beta_array #end index of data describing a H-beta transition
+
+wavelength_beta_list = []
+b_beta_list = []
+
+
+for i in range(len(beta_array)):
+    wavelength_beta_list.append((transitions_df.loc[beta_array[i]+2:end_beta_array[i],'Wavelength']).to_numpy().astype(float))
+    b_beta_list.append((transitions_df.loc[beta_array[i]+2:end_beta_array[i],'Bfield']).to_numpy().astype(float))
+    #wavelength and B-field arrays for all the H-beta transitions
 
 #%%
 """ Part 1: Load data
@@ -27,7 +90,7 @@ Notes: data - MWD spectrum
        flux - y-values
 """
 #load data and sort into appropriate variables
-filename = "DESI_WDJ180813.60+652321.24_bin0p2.dat"
+filename = "DESI_WDJ002217.81+204135.73_bin0p2.dat"
 data = np.genfromtxt(f'{filename}', delimiter=' ')
 
 wavelength = data[:,0]
@@ -38,12 +101,12 @@ error = data[:,2]
 #flux = flux[0:28251]
 #error = error[0:28251]
 
-plt.figure("Whole spectrum")
+plt.figure(f'{filename}')
 plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')
 plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
 plt.ylabel("Flux", size = "15")
-plt.xlim(5000, 9000)
-plt.ylim(4,20)
+#plt.xlim(5000, 9000)
+#plt.ylim(0,20)
 plt.grid()
 plt.legend()
 plt.show()
@@ -60,14 +123,17 @@ startx/endx define the specific region to be cut out (the absorption feature) ""
 
 begin = 5000
 finish = 8000
-start_Gauss_1 = 5810
-end_Gauss_1 = 6250
-start_Gauss_2 = 6465
-end_Gauss_2 = 6555
-start_Gauss_3 = 6835
-end_Gauss_3 = 7150
-			
+start_Gauss_1 = 6042 
+end_Gauss_1 = 6302
+start_Gauss_2 = 6370
+end_Gauss_2 = 6670
+start_Gauss_3 = 6805
+end_Gauss_3 = 7018
 
+p1 = [6177,100,3]
+p2 = [6535,100,3]
+p3 = [6910,100,3]
+			
 start_Ha_Gauss = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-begin)))[0])
 end_Ha_Gauss = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-finish)))[0])
 masked_Gauss_flux = flux[start_Ha_Gauss:end_Ha_Gauss]
@@ -145,7 +211,7 @@ plt.figure()
 plt.plot(masked_Gauss_reg, norm_Gauss_spectra, label = f"{filename}") #plot the normalised spectrum
 plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
 plt.ylabel("Normalised Flux", size = "15")
-plt.ylim(0.5,2)
+#plt.ylim(0.5,2)
 plt.legend()
 plt.show()
 #%%
@@ -188,12 +254,8 @@ y3_feature = np.array(y3_feature)
 err3_feature = np.array(err3_feature)
 
 def Gaussian(x,mu,sig,A):
-    gaus = (-(A)*((1/np.sqrt((2*sp.pi)*sig))*(sp.exp(-(x-mu)**2/(2*sig**2)))))+1
+    gaus = ((A)*((1/np.sqrt((2*sp.pi)*sig))*(sp.exp(-(x-mu)**2/(2*sig**2)))))+1
     return gaus
-
-p1 = [6040,150,3]
-p2 = [6515,50,3]
-p3 = [6995,100,3]
 
 
 popt_Gauss_1, cov_Gauss_1 = opt.curve_fit(Gaussian, x1_feature, y1_feature, p1, sigma = err1_feature)
@@ -213,23 +275,23 @@ plt.figure("First Gaussian")
 plt.grid()
 plt.plot(x1_feature,y1_feature)
 plt.plot(x1_feature,Gaussian(x1_feature,*popt_Gauss_1))
-plt.savefig('Intermediate Field Gaussian Fit Plots/'+f'{filename}'+'_sigma_minus.png')
+#plt.savefig('Intermediate Field Gaussian Fit Plots/'+f'{filename}'+'_sigma_minus.png')
 
 plt.figure("Second Gaussian")
 plt.grid()
 plt.plot(x2_feature,y2_feature)
 plt.plot(x2_feature,Gaussian(x2_feature,*popt_Gauss_2))
-plt.savefig('Intermediate Field Gaussian Fit Plots/'+f'{filename}'+'_pi.png')
+#plt.savefig('Intermediate Field Gaussian Fit Plots/'+f'{filename}'+'_pi.png')
 
 plt.figure("Third Gaussian")
 plt.grid()
 plt.plot(x3_feature,y3_feature)
 plt.plot(x3_feature,Gaussian(x3_feature,*popt_Gauss_3))
-plt.savefig('Intermediate Field Gaussian Fit Plots/'+f'{filename}'+'_sigma_plus.png')
+#plt.savefig('Intermediate Field Gaussian Fit Plots/'+f'{filename}'+'_sigma_plus.png')
 
 #%%
-start_B = 14E6 #starting B-field for spline 
-end_B = 60E6 #end B-field for spline 
+start_B = 13E6 #starting B-field for spline 
+end_B = 80E6 #end B-field for spline 
 
 start_list = [] #list of indices for the start of the spline
 end_list = [] #list of indices for the end of the spline
@@ -288,56 +350,95 @@ pi_diff = np.subtract(pi_list[2],pi_list[0])
 right_sigma_diff = np.subtract(right_sigma_list[4],right_sigma_list[0])
 
 #%%
-left_sigma_peak = int(np.where(left_sigma_means == min(left_sigma_means, key=lambda x:abs(x-popt_Gauss_1[0])))[0])
-left_sigma_spread = int(np.where(left_sigma_diff == min(left_sigma_diff, key=lambda x:abs(x-popt_Gauss_1[1])))[0])
-
-pi_peak = int(np.where(pi_means == min(pi_means, key=lambda x:abs(x-popt_Gauss_2[0])))[0])
-pi_spread = int(np.where(pi_diff == min(pi_diff, key=lambda x:abs(x-popt_Gauss_2[1])))[0])
-
-right_sigma_peak = int(np.where(right_sigma_means == min(right_sigma_means, key=lambda x:abs(x-popt_Gauss_3[0])))[0])
-right_sigma_spread = int(np.where(right_sigma_diff == min(right_sigma_diff, key=lambda x:abs(x-popt_Gauss_3[1])))[0])
-#%%
-left_B_guess = B_range[left_sigma_peak]
-pi_B_guess = B_range[pi_peak]
-right_B_guess = B_range[right_sigma_peak]
-
-print(left_B_guess/1E6)
-print(pi_B_guess/1E6) 
-print(right_B_guess/1E6)
-
-#%%
 # =============================================================================
-# """
-# Chi-squared fitting
-# """
+# left_sigma_peak = int(np.where(left_sigma_means == min(left_sigma_means, key=lambda x:abs(x-popt_Gauss_1[0])))[0])
+# left_sigma_spread = int(np.where(left_sigma_diff == min(left_sigma_diff, key=lambda x:abs(x-popt_Gauss_1[1])))[0])
 # 
-# left_sigma_sq = np.square(left_sigma_means-popt_Gauss_1[0])
-# pi_sq = np.square(pi_means-popt_Gauss_2[0])
-# right_sigma_sq = np.square(right_sigma_means-popt_Gauss_3[0])
+# pi_peak = int(np.where(pi_means == min(pi_means, key=lambda x:abs(x-popt_Gauss_2[0])))[0])
+# pi_spread = int(np.where(pi_diff == min(pi_diff, key=lambda x:abs(x-popt_Gauss_2[1])))[0])
 # 
-# left_sigma_chi = (1/(popt_Gauss_1[1]))*left_sigma_sq
-# pi_chi = (1/(popt_Gauss_2[1]))*pi_sq
-# right_sigma_chi = (1/(popt_Gauss_3[1]))*right_sigma_sq
+# right_sigma_peak = int(np.where(right_sigma_means == min(right_sigma_means, key=lambda x:abs(x-popt_Gauss_3[0])))[0])
+# right_sigma_spread = int(np.where(right_sigma_diff == min(right_sigma_diff, key=lambda x:abs(x-popt_Gauss_3[1])))[0])
+# #%%
+# left_B_guess = B_range[left_sigma_peak]
+# pi_B_guess = B_range[pi_peak]
+# right_B_guess = B_range[right_sigma_peak]
 # 
-# left_sigma_chi_2 = (1/(popt_Gauss_1[0]))*left_sigma_sq
-# pi_chi_2 = (1/(popt_Gauss_2[0]))*pi_sq
-# right_sigma_chi_2 = (1/(popt_Gauss_3[0]))*right_sigma_sq
-# 
-# chi_tot = left_sigma_chi+pi_chi+right_sigma_chi
-# chi_tot_2 = left_sigma_chi_2+pi_chi_2+right_sigma_chi_2
-# 
-# chi_min = chi_tot.min()
-# chi_min_idx = int((np.where(chi_tot == chi_tot.min()))[0])
-# 
-# chi_min_2 = chi_tot_2.min()
-# chi_min_idx_2 = int((np.where(chi_tot_2 == chi_tot_2.min()))[0])
-# 
-# chi_B_guess = B_range[chi_min_idx]
-# chi_B_guess_2 = B_range[chi_min_idx_2]
-# 
-# print(chi_B_guess/1E6)
-# print(chi_B_guess_2/1E6)
+# print(left_B_guess/1E6)
+# print(pi_B_guess/1E6) 
+# print(right_B_guess/1E6)
 # =============================================================================
+
+#%%
+"""
+Chi-squared fitting
+"""
+
+left_sigma_sq = np.square(left_sigma_means-popt_Gauss_1[0])
+pi_sq = np.square(pi_means-popt_Gauss_2[0])
+right_sigma_sq = np.square(right_sigma_means-popt_Gauss_3[0])
+
+left_sigma_chi = (1/(popt_Gauss_1[1]))*left_sigma_sq
+pi_chi = (1/(popt_Gauss_2[1]))*pi_sq
+right_sigma_chi = (1/(popt_Gauss_3[1]))*right_sigma_sq
+
+left_sigma_chi_2 = (1/(popt_Gauss_1[0]))*left_sigma_sq
+pi_chi_2 = (1/(popt_Gauss_2[0]))*pi_sq
+right_sigma_chi_2 = (1/(popt_Gauss_3[0]))*right_sigma_sq
+
+left_sigma_chi_3 = (1/(left_sigma_means))*left_sigma_sq
+pi_chi_3 = (1/(pi_means))*pi_sq
+right_sigma_chi_3 = (1/(right_sigma_means))*right_sigma_sq
+
+chi_tot = left_sigma_chi+pi_chi+right_sigma_chi
+chi_tot_2 = left_sigma_chi_2+pi_chi_2+right_sigma_chi_2
+chi_tot_3 = left_sigma_chi_3+pi_chi_3+right_sigma_chi_3
+
+chi_min = chi_tot.min()
+chi_min_idx = int((np.where(chi_tot == chi_tot.min()))[0])
+
+chi_min_2 = chi_tot_2.min()
+chi_min_idx_2 = int((np.where(chi_tot_2 == chi_tot_2.min()))[0])
+
+chi_min_3 = chi_tot_3.min()
+chi_min_idx_3 = int((np.where(chi_tot_3 == chi_tot_3.min()))[0])
+
+chi_B_guess = B_range[chi_min_idx]
+chi_B_guess_2 = B_range[chi_min_idx_2]
+chi_B_guess_3 = B_range[chi_min_idx_3]
+
+print(chi_B_guess/1E6)
+print(chi_B_guess_2/1E6)
+print(chi_B_guess_3/1E6)
+print(chi_min)
+print(chi_min_2)
+print(chi_min_3)
+
+confidence_range_idx_sigma1 = np.where((chi_tot <= (chi_min + 1)))[0]
+confidence_range_idx_sigma230 = np.where((chi_tot <= (chi_min + 2.30)))[0]
+B_chi_range_sigma1 = np.array([B_range[i] for i in confidence_range_idx_sigma1])
+B_chi_range_sigma1 = (1E-6)*B_chi_range_sigma1
+B_chi_lower_sigma1 = min(B_chi_range_sigma1)
+B_chi_upper_sigma1 = max(B_chi_range_sigma1)
+B_chi_range_sigma230 = np.array([B_range[i] for i in confidence_range_idx_sigma230])
+B_chi_range_sigma230 = (1E-6)*B_chi_range_sigma230
+B_chi_lower_sigma230 = min(B_chi_range_sigma230)
+B_chi_upper_sigma230 = max(B_chi_range_sigma230)
+print(B_chi_lower_sigma1, B_chi_upper_sigma1)
+print(B_chi_lower_sigma230, B_chi_upper_sigma230)
+
+confidence_range_idx_exp1 = np.where((chi_tot_3 <= (chi_min_3 + 1)))[0]
+confidence_range_idx_exp230 = np.where((chi_tot_3 <= (chi_min_3 + 2.30)))[0]
+B_chi_range_exp1 = np.array([B_range[i] for i in confidence_range_idx_exp1])
+B_chi_range_exp1 = (1E-6)*B_chi_range_exp1
+B_chi_lower_exp1 = min(B_chi_range_exp1)
+B_chi_upper_exp1 = max(B_chi_range_exp1)
+B_chi_range_exp230 = np.array([B_range[i] for i in confidence_range_idx_exp230])
+B_chi_range_exp230 = (1E-6)*B_chi_range_exp230
+B_chi_lower_exp230 = min(B_chi_range_exp230)
+B_chi_upper_exp230 = max(B_chi_range_exp230)
+print(B_chi_lower_exp1, B_chi_upper_exp1)
+print(B_chi_lower_exp230, B_chi_upper_exp230)
 #%%
 #%%
 # =============================================================================

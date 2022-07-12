@@ -24,7 +24,8 @@ Part 1:
     Open and read the GF FITS file
     Extract quantities from the FITS file
 """
-hdulist = fits.open("{:s}final_catalogue_v6.fits".format(r"C:\Users\44743\Documents\Imperial Year 4\MSci Project\\"))
+# final_catalogue_v6 is Gaia data - thousands of WD candidates 
+hdulist = fits.open("{:s}final_catalogue_v6.fits".format(r"C:\Users\44743\Documents\Imperial Year 4\MSci Project\Datafiles\\"))
 
 GFdata = hdulist[1].data # List of WD names in GF catalogue 
 GFdata0 = hdulist[0].data
@@ -62,31 +63,38 @@ info_df = pd.DataFrame(np.array([G_abs, BPRP, parallax, parallax_err, T_eff, eT_
 dataset = info_df.reset_index()
 dataset = dataset.rename(columns={"index": "WDJ Name"}) #relabel the relic column header from the original dataframe
 
-#%% ESSENTIAL - plots HR diagram (and gets essential data for it )
-""" Plotting script for MWD HRD """
-# Selects WDs with reciprocal parallaxes/1000 < 100 --> says WDs must be x distance from us (or close to us?)
-
-dist_pc = np.reciprocal(parallax/1000)
-idx = np.where(dist_pc < 100)[0]
-
-dist_pc_constrained = [dist_pc[i] for i in idx]
-BPRP_sel = [BPRP[i] for i in idx]
-G_sel = [G_abs[i] for i in idx]
-
-#plt.figure()
-plt.gca().invert_yaxis()
-plt.xlabel('BP-RP')
-plt.ylabel('G_abs')
-
-plt.plot(BPRP_sel,G_sel,'o', markersize=0.25)
-
-
-#%%
+##%% ESSENTIAL - plots HR diagram (and gets essential data for it )
+#""" Plotting script for MWD HRD """
+## Selects WDs with reciprocal parallaxes/1000 < 100 --> says WDs must be x distance from us (or close to us?)
+#
+#dist_pc = np.reciprocal(parallax/1000)
+#idx = np.where(dist_pc < 100)[0]
+#
+#dist_pc_constrained = [dist_pc[i] for i in idx]
+#BPRP_sel = [BPRP[i] for i in idx]
+#G_sel = [G_abs[i] for i in idx]
+#
+##plt.figure()
+#plt.gca().invert_yaxis()
+#plt.xlabel('BP-RP')
+#plt.ylabel('G_abs')
+#
+#plt.plot(BPRP_sel,G_sel,'o', markersize=0.25)
+#
+#
+##%%
 """ Reading in batches of files """
 
 column_names = ["Filename", "Class", "B alpha", "B error alpha", "lambda0", "lambda0 error", "begin", "finish", "start1", "end1", "start2", "end2", "start3", "end3", "Notes"]
+column_names = ["Filename", 'Identifier', "Class", 'Cut_class', "B alpha",\
+                "B error alpha", "lambda0", "lambda0 error", 'sigma1', 'sigma2', \
+                "begin", "finish", "start1", "end1", "start2", "end2", "start3", "end3", \
+                'Notes', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6']
+
 cut_regions = ["begin", "finish", "start1", "end1", "start2", "end2", "start3", "end3"]
 datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\Detailed class catalogue 2.csv', skiprows = 1, names = column_names)
+datasets = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\UROP Year 4\New DAH MWDs.csv', skiprows = 1, names = column_names)
+
 filename_list = []
 #tot_list_ = []
 
@@ -101,11 +109,13 @@ end3_list = []
 
 cut_regions = [begin_list, finish_list, start1_list, end1_list, start2_list, end2_list, start3_list, end3_list]   
 
+condition = 1
 for i in range(len(datasets)):
     # Hash out beyond .Class[i] == x if you want to read in subsets (otherwise will have all 216 systems)
     """ Bear in mind number_sections needs to be changed to 11 if doing for 216 systems (from 6) """
 
-    if datasets.Class[i] == 1 or datasets.Class[i] == 2 or datasets.Class[i] == 3 or datasets.Class[i] == 4:
+    if condition == 1:
+#    datasets.Class[i] == 1 or datasets.Class[i] == 2 or datasets.Class[i] == 3 or datasets.Class[i] == 4:
         filename_list.append((datasets.Filename[i] + ' ')) # NOTE DESI AND GAIA HAVE DIFFERENT NAMES
                                                             # therefore cannot call as same variable!!
 #        for j in range(len(cut_regions)):
@@ -137,7 +147,7 @@ for i in range(0,number_sections):
         subsections[i][j] = datafolder[j][intervals[i]:intervals[i+1]]
 
 
-#%% 
+##%% 
 number_sections = 11 # for class 1 this is only 6 (was 11 for generality but was empty lists past this point)
 intervals = [0]
 [intervals.append(intervals[i]+20) for i in range(0,number_sections)]

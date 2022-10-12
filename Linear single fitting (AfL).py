@@ -1,0 +1,479 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Oct  5 13:31:08 2021
+
+Directories: 
+    Users\44743\Documents\Imperial Year 4\MSci Project\DESI_DxH\DESI_DxH
+    
+Method: 
+    Part 1 - Loads data
+    Part 2 - Performs cuts on the data to isolate the H-alpha region 
+    Part 3 - Removes the absorption region to isolate the continuum
+    Part 4 - Fits a polynomial to the continuum and normalises the spectrum
+    
+"""
+import pylab as pl
+import scipy as sp
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.optimize as opt
+import lmfit as lm
+import pylab
+import glob
+import pandas as pd 
+from collections import Counter
+#%%
+""" Part 1: Load data
+
+Notes: data - MWD spectrum
+       wavelength - x-values 
+       flux - y-values
+"""
+
+#load data and sort into appropriate variables
+filename = "DESI_WDJ070253.76+553733.64_bin0p2.dat"
+filename = "DESI_WDJ234338.90+165031.50_bin0p2.dat" 
+filename = "DESI_WDJ231845.10+123602.77_bin0p2.dat" 
+filename = "DESI_WDJ001321.07+282019.83_bin0p2.dat" # perfect DA
+filename = "DESI_WDJ015013.09+283556.31_bin0p2.dat" # perfect MWD
+filename = "DESI_WDJ023333.52+214340.50_bin0p2.dat" # theory: pashcen back regime MWD
+filename2 = "DESI_WDJ231845.10+123602.77_bin0p2.dat" # theory: quadratic regime MWD
+
+#filename = "DESI_WDJ001742.44+004137.35_bin0p2.dat"
+#filename = "DESI_WDJ025729.76+030819.43_bin0p2.dat" # IF viva overplot
+#filename = "DESI_WDJ224741.46+145638.84_bin0p2.dat" # HF viva overplot
+# DESI_WDJ034513.72-111452.15_bin0p2.dat  DESI_WDJ082506.73-013732.89_bin0p2.dat
+
+data = np.genfromtxt(f'{filename}', delimiter=' ')
+data2 = np.genfromtxt(f'{filename2}', delimiter=' ')
+
+wavelength = data[:,0]
+flux = data[:,1]
+error = data[:,2]
+
+wavelength2 = data2[:,0]
+flux2 = data2[:,1]
+error2 = data2[:,2]
+
+#plt.figure("Whole spectrum")
+plt.figure()
+#plt.errorbar(wavelength,flux, yerr = error, color='darkblue',label = f"{filename}", fmt ='')#, color='darkblue')#, ms = 1)
+
+plt.errorbar(wavelength,flux*20+200, yerr = error, color='darkblue',label = f"Linear Zeeman regime", fmt ='')#, color='darkblue')#, ms = 1)
+plt.errorbar(wavelength2,flux2-30, yerr = error2, color='royalblue',label = f"Quadratic Zeeman regime", fmt ='')#, color='darkblue')#, ms = 1)
+
+spectralfeatureslist = [5171, 5893, 6711, 6456, 5019, 8500, 5875, 6867, 6678, 5015, 4471, 7445, 5269, 5167,\
+                        4461, 4921, 7065]
+spectralnameslist = ['Mg I', 'Na I','Fe I','Ca II','Ca II','HF marker', 'He I', 'He I', 'He I', 'He I', 'He I',\
+                     'Fe I', 'Fe I', 'Fe I', 'Fe I', 'He I', 'He I']
+#for i in range(len(spectralfeatureslist)):
+#    plt.plot(np.array([spectralfeatureslist[i]]*100), np.linspace(np.amin(flux), np.amax(flux), 100), \
+#             alpha = 1, label = spectralnameslist[i])
+mod_flux = flux*20+200
+
+plt.plot(np.array([6562.8]*100), np.linspace(0, 600, 100), \
+             alpha = 1, color = 'tomato', label = r'$\mathrm{H \alpha}$ transition wavelength')
+
+plt.xlabel("Wavelength $(\mathrm{\AA})$" , size = "13")
+plt.ylabel("Flux", size = "13")
+plt.xticks(fontsize=11)
+plt.yticks(fontsize=11)
+
+#plt.xlim(4450, 7000) # DA 
+#plt.ylim(32,403)
+#
+#plt.xlim(3750, 7000) # DA 
+#plt.ylim(-14,640)
+#
+#
+#plt.xlim(4500, 7270) # MWD
+#plt.ylim(16,148)
+
+plt.xlim(4490, 7554) # linear + quadratic theory regimes unnormalised 
+plt.ylim(7, 797)
+
+plt.grid()
+plt.legend()
+#plt.savefig(f'DA WD spectrum.png', dpi = 1000, bbox_inches = 'tight')
+#plt.savefig(f'linear and quadratic unnormalised spectra theory.pdf', bbox_inches = 'tight')
+
+plt.show()
+#%% RUN AFTER BIG CELL (just dont want down bottom - cumbersome to edit )
+    
+#tot_list = [Bvaluelist, Bvalueerr, lambdalist, lambdaerrlist, beginlist, finishlist, start1list, end1list, start2list, end2list, start3list, end3list]   
+#
+#aexceldata = np.zeros((len(filenamelist),len(tot_list)))
+#for i in range(len(filenamelist)):
+#    for j in range(0,len(tot_list)):
+#        aexceldata[i][j] = tot_list[j][i]
+#
+##%%
+bexceldata = np.zeros((len(filenamelist),len(datalist)))
+
+for i in range(0, len(datalist)):
+    bexceldata[:,i] = datalist[i]
+
+#%%
+""" Part 2: Performs cuts on the data to isolate the H-alpha region
+
+Notes: start/start_Ha - beginning of cut
+       last/last_Ha - end of cut 
+       masked_Ha_flux - y-values included within the cut
+       masked_Ha_reg - x-values included within the cut
+
+begin/ finish define the whole region including the triplet feature 
+startx/endx define the specific region to be cut out (the absorption feature) """
+
+#filename = "DESI_WDJ171101.52+654549.87_bin0p2.dat"
+#filename = filename_list[1]
+data = np.genfromtxt(f'{filename}', delimiter=' ')
+
+wavelength = data[:,0]
+flux = data[:,1]
+error = data[:,2]
+##%%
+plt.figure()
+plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')
+
+plt.xlabel("Wavelength $\lambda$ $[\mathrm{\AA}]$" , size = "15")
+plt.ylabel("Flux", size = "15")
+
+plt.axvline(6562.8, ls = '--', color = 'green', lw = 1)
+plt.axvline(4861.35, ls = '--', color = 'green', lw = 1)
+plt.axvline(4340, ls = '--', color = 'green', lw = 1)
+
+#plt.xlim(3300, 9000)
+#plt.ylim(-20,190)
+plt.grid()
+plt.legend()
+plt.show()
+
+#%%
+
+filenamelist = []
+datalist = [[] for i in range(0, 14)] # lengt(# data params you want (4 ))
+
+begin = 5800
+finish = 7200
+start1 = 6330
+end1 = 6800
+start2 = 9815
+end2 = 9990
+start3 = 9140
+end3 = 9340
+
+#lambda_guess = 4861.35
+lambda_guess = 6562.8
+
+start_Ha = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-begin)))[0])
+end_Ha = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-finish)))[0])
+masked_Ha_flux = flux[start_Ha:end_Ha]
+masked_Ha_reg = wavelength[start_Ha:end_Ha]
+masked_Ha_err = error[start_Ha:end_Ha]
+
+dip_start1 = int(np.where(masked_Ha_reg == min(masked_Ha_reg, key=lambda x:abs(x-start1)))[0])
+dip_end1 = int(np.where(masked_Ha_reg == min(masked_Ha_reg, key=lambda x:abs(x-end1)))[0])
+dip_start2 = int(np.where(masked_Ha_reg == min(masked_Ha_reg, key=lambda x:abs(x-start2)))[0])
+dip_end2 = int(np.where(masked_Ha_reg == min(masked_Ha_reg, key=lambda x:abs(x-end2)))[0])
+dip_start3 = int(np.where(masked_Ha_reg == min(masked_Ha_reg, key=lambda x:abs(x-start3)))[0])
+dip_end3 = int(np.where(masked_Ha_reg == min(masked_Ha_reg, key=lambda x:abs(x-end3)))[0])
+
+masked_flux = list(masked_Ha_flux)
+masked_wavelength = list(masked_Ha_reg)
+masked_err = list(masked_Ha_err)
+
+##%%
+flxframe = pd.DataFrame(masked_flux)
+flxframe.loc[dip_start1:dip_end1] = np.nan
+flxframe.loc[dip_start2:dip_end2] = np.nan
+flxframe.loc[dip_start3:dip_end3] = np.nan
+flxframe = (flxframe.dropna()).to_numpy()
+
+wavframe = pd.DataFrame(masked_wavelength)
+wavframe.loc[dip_start1:dip_end1] = np.nan
+wavframe.loc[dip_start2:dip_end2] = np.nan
+wavframe.loc[dip_start3:dip_end3] = np.nan
+wavframe = (wavframe.dropna()).to_numpy()
+
+""" Part 4: Fits a polynomial to the continuum and normalises the spectrum
+Notes: Poly_3o is a third-order polynomial function which fits the continuum using a least-squares method
+      
+"""
+flxframe = np.array(flxframe)
+wavframe = np.array(wavframe)
+flux_list = flxframe[:,0]
+wav_list = wavframe[:,0]
+###%%
+#plt.figure()
+#plt.plot(wav_list,flux_list,'x')
+#plt.show()
+##%%
+def Poly_3o(x, a, b, c, d):
+    y = a*x**3 + b*x**2 + c*x + d
+    return y
+
+p0 = np.array([1, 1, 1, 1]) #fit parameters
+p, cov = opt.curve_fit(Poly_3o, wav_list,flux_list, p0) # do not change
+Continuum = Poly_3o(masked_Ha_reg, p[0], p[1], p[2], p[3]) # use masked_Ha_reg since more data points in array
+
+#for c in zip(p, np.sqrt(np.diag(cov))):# zips root of diag of cov matrix with related value in curve fit
+#    print('%.15f pm %.4g' % (c[0], c[1]))# prints value and uncertainty, f is decimal places and G is sig figs
+
+norm_spectra = masked_Ha_flux/Continuum
+
+#plt.figure()
+#plt.grid()
+#plt.yticks([0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.20, 1.25, 1.30])
+#plt.plot(masked_Ha_reg, Poly_3o(masked_Ha_reg, p[0], p[1], p[2], p[3])/Continuum, \
+#         zorder=4,color = 'red', label = "Poly")
+#plt.plot(wav_list,flux_list,'x')
+#plt.plot(masked_Ha_reg, Continuum)
+#plt.show()
+###%%
+#plt.figure()
+#plt.plot(masked_Ha_reg, norm_spectra, label = f"{filename}") #plot the normalised spectrum
+#plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+#plt.ylabel("Normalised Flux", size = "15")
+#plt.legend()
+#plt.show()
+##%%
+""" Triplet Lorentzian Profile 
+
+Notes: 
+"""
+xp_triplet = []
+yp_triplet = []
+err_triplet = []
+for a in range(len(masked_Ha_reg)):
+    if masked_Ha_reg[a] > (begin) and masked_Ha_reg[a] < (finish):
+        xp_triplet.append(masked_Ha_reg[a])
+        yp_triplet.append(norm_spectra[a])
+        err_triplet.append(masked_err[a])
+xp_triplet = np.array(xp_triplet)
+yp_triplet = np.array(yp_triplet)
+err_triplet = np.array(err_triplet)
+
+""" Ha Data; Lorentzian fit _3Lorentzian; Run after clipping data xp_triplet yp_triplet """
+
+# DEFINE ANOTHER FUNCTION HERE 
+# Zeeman splitting - returns delta_lambda 
+def delta_lambda(B):
+    A = np.square(6562.8/6564)
+    y = 20.2*A*B
+    return y 
+
+def delta_lambda2(B):
+    return (4.67*10**-7)*(np.square(6562.8))*B*(1*10**6)
+
+def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
+#    lambda0 = 6562.8
+    A = np.square(lambda0/6564)
+    delt_lam = 20.2*A*B
+    lambda_minus = lambda0 - delt_lam
+    lambda_plus = lambda0 + delt_lam     
+    return -((amp1*wid1**2/((x-lambda_minus)**2+wid1**2)) +\
+            (amp2*wid2**2/((x-lambda0)**2+wid2**2)) +\
+                (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
+
+def _3Lorentzian(x, lambda0, B, amp1, wid1, amp2, wid2):
+#    lambda0 = 6562.8
+    A = np.square(lambda0)
+    delt_lam = (4.67e-7)*A*B
+    lambda_minus = lambda0 - delt_lam
+    lambda_plus = lambda0 + delt_lam     
+    return -((amp1*wid1**2/((x-lambda_minus)**2+wid1**2)) +\
+            (amp2*wid2**2/((x-lambda0)**2+wid2**2)) +\
+                (amp1*wid1**2/((x-lambda_plus)**2+wid1**2)))+1
+
+
+Data = {}
+Res_list = []
+B_list = []
+lambda0_list = []
+
+rangeBval = np.arange(0,50.5,0.5)
+for i in rangeBval:
+    p0 = np.array([lambda_guess, i, 0.8, 10, 0.8, 10])
+    
+    try:
+        popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, p0, sigma = err_triplet)
+    except:
+        pass
+    
+#    popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, p0)
+#    for c in zip(popt_VoigtNew, np.sqrt(np.diag(cov_VoigtNew))):
+#        print("%.8f pm %.3g" % (c[0], c[1]))
+    Residuals= _3Lorentzian(xp_triplet, *popt_3lorentz)-yp_triplet
+    Res_list.append(sum(np.square(Residuals)))
+    B_list.append(popt_3lorentz[1])
+    lambda0_list.append(popt_3lorentz[0])
+    
+Data[1] = [Res_list, B_list, lambda0_list]
+
+index = np.where(Res_list == np.amin(Res_list))[0][0]
+
+# Method 
+# The determined B value is BACK INTO curvefit to re-estimate the final parameters of the fit 
+popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
+                                            p0=[lambda_guess, B_list[index], 0.8, 10, 0.8, 10], \
+                                            sigma = err_triplet)#, \
+                                            #bounds = ((-np.inf, 0, -np.inf, -np.inf, -np.inf, -np.inf),(np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)))
+
+## ALTERNATIVE METHOD: Just take first curvefit estimate - prevents over fitting and finding a 
+# wrong local minima in least squares
+#p0 = np.array([6562.8, rangeBval[2], 0.8, 10, 0.8, 10])
+#popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, p0, sigma = err_triplet)
+
+## ALTERNATIVE METHOD 2: (Supercedes Method):
+# Puts the list of returned B values from first curvefit into another curvefit, scans through and 
+# looks to see which has the lowest residuals (on the resulting curvefit); 
+# selects the corresponding new index for that fit, and then uses that index to identify the correct
+# B value from B_list (the first! returned set of B values) (NOTE THIS IS THE SECOND TIME IT IS CURVEFITTED)
+Res_list2 = []
+B_list2 = []
+lambda0_list2 = []
+
+for k in range(len(B_list)):
+    p0 = np.array([lambda_guess, B_list[k], 0.8, 10, 0.8, 10])
+    
+    try:
+        popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, p0, sigma = err_triplet)
+    except:
+        pass
+    Residuals2= _3Lorentzian(xp_triplet, *popt_3lorentz)-yp_triplet
+    Res_list2.append(sum(np.square(Residuals2)))
+    B_list2.append(popt_3lorentz[1])
+    lambda0_list2.append(popt_3lorentz[0])
+
+index2 = np.where(Res_list2 == np.amin(Res_list2))[0][0]
+
+# Take the minimum residual of both residual lists combined - thus doesnt double iterate 
+# if not requied/ beneficial 
+A = Res_list+Res_list2
+index3 = np.where(A == np.amin(A))[0][0]
+
+# If index3 > len(B_list) then the double iteration is preferable, and so we use index2 
+if index3 >= len(B_list)-1:
+    index3 = index2
+## If any of the initial guesses for B are the best, this will ensure these are selected 
+#if Res_list[index3] >= Res_list[index3]:
+#    B_list[index3] = rangeBval[index3]
+#
+## If indices do not match up exactly with B values --> consequence of using only B_list below 
+## Resolves the case if index3 does not correspond to the same B value in B_list and B_list2
+#if Res_list[index3] >= Res_list2[index3]:
+#    B_list[index3] = B_list2[index3]
+#
+#
+###%%
+## The determined B value is BACK INTO curvefit to re-estimate the final parameters of the fit 
+## NOTE THIS IS STILL ONLY THE SECOND CURVEFIT - NOTE USE OF B_list NOT! B_list2
+#popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
+#                                            p0=[6562.8, B_list[index3], 0.8, 10, 0.8, 10], \
+#                                            sigma = err_triplet)#, \
+#                                            #bounds = ((-np.inf, 0, -np.inf, -np.inf, -np.inf, -np.inf),(np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)))
+
+# In the (2 instance so far) case that the lowest residuals outright does not conform to the best fit 
+# This is different to the reason for B_list2 and the secod curvefit; the second curvefit is used when
+# the first curvefit does not find the correct B, so finer precision is required
+# this case is when the correct B value IS identified, but is not selected because another (wrong)
+# B value has lower residuals 
+
+print("B = ", popt_3lorentz[1], 'pm', np.sqrt(np.diag(cov_3lorentz))[1])
+
+#if np.around(np.array([popt_3lorentz[1]]), 2) != Counter(np.around(np.array(B_list),4)).most_common(1)[0][0]:
+#    B_list[index3] = Counter(np.around(np.array(B_list),4)).most_common(1)[0][0]
+
+popt_3lorentz, cov_3lorentz = opt.curve_fit(_3Lorentzian, xp_triplet, yp_triplet, \
+                                            p0=[lambda_guess, B_list[index3], 0.8, 10, 0.8, 10], \
+                                            sigma = err_triplet)#, \
+                                            #bounds = ((-np.inf, 0, -np.inf, -np.inf, -np.inf, -np.inf),(np.inf, np.inf, np.inf, np.inf, np.inf, np.inf)))
+
+for c in zip(popt_3lorentz, np.sqrt(np.diag(cov_3lorentz))):
+    print("%.8f pm %.3g" % (c[0], c[1]))
+
+print("B = ", popt_3lorentz[1], 'pm', np.sqrt(np.diag(cov_3lorentz))[1])
+
+Residuals= _3Lorentzian(xp_triplet, *popt_3lorentz)-yp_triplet
+print("Lorentzian Residual sum of squares = ", sum(np.square(Residuals)))
+
+filenamelist.append(filename)
+
+datavalues = [popt_3lorentz[1], np.sqrt(np.diag(cov_3lorentz))[1], popt_3lorentz[0], \
+              np.sqrt(np.diag(cov_3lorentz))[0], popt_3lorentz[3], popt_3lorentz[5], \
+              begin, finish, start1, end1, start2, end2, start3, end3]   
+
+for i in range(0,len(datavalues)):
+    datalist[i].append(datavalues[i])
+
+
+##%% PLotting Cell
+fig, axs = plt.subplots(2, gridspec_kw={'height_ratios': [2.5, 1]})
+fig.suptitle(f"Lorentzian fit {filename} \n B = {popt_3lorentz[1]} +/- {np.sqrt(np.diag(cov_3lorentz))[1]}", \
+             fontsize = "13")
+axs[0].plot(xp_triplet, yp_triplet, label = "WD Ha data")
+axs[0].plot(xp_triplet, _3Lorentzian(xp_triplet, *popt_3lorentz), linewidth=2, color = "orange", \
+                              label = "Lorentzian c_fit")
+#axs[0].text(r"B = {popt_3lorentz}")
+for ax in axs.flat:
+    ax.set_xlabel(r'Wavelength $\lambda$ $[\mathrm{\AA}]$', fontsize = "13")
+    ax.set_ylabel('Normalised flux', fontsize = "13")
+for ax in axs.flat:
+    ax.label_outer()
+axs[1].set_ylabel('Flux residuals')
+axs[0].grid()
+#""" Voigt Residuals Plot """
+axs[1].plot(xp_triplet, Residuals, linewidth=2)#, label = "Lorentzian fit Residuals")
+axs[1].plot(xp_triplet, xp_triplet*0/xp_triplet, linewidth = 1)
+axs[0].legend()
+#axs[1].legend()
+axs[1].grid()
+#plt.savefig("Gaussian Residuals", dpi = 1000)
+plt.show()
+
+
+
+bexceldata = np.zeros((len(filenamelist),len(datalist)))
+
+for i in range(0, len(datalist)):
+    bexceldata[:,i] = datalist[i]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

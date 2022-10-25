@@ -63,26 +63,26 @@ info_df = pd.DataFrame(np.array([G_abs, BPRP, parallax, parallax_err, T_eff, eT_
 dataset = info_df.reset_index()
 dataset = dataset.rename(columns={"index": "WDJ Name"}) #relabel the relic column header from the original dataframe
 
-##%% ESSENTIAL - plots HR diagram (and gets essential data for it )
-#""" Plotting script for MWD HRD """
-## Selects WDs with reciprocal parallaxes/1000 < 100 --> says WDs must be x distance from us (or close to us?)
-#
-#dist_pc = np.reciprocal(parallax/1000)
-#idx = np.where(dist_pc < 100)[0]
-#
-#dist_pc_constrained = [dist_pc[i] for i in idx]
-#BPRP_sel = [BPRP[i] for i in idx]
-#G_sel = [G_abs[i] for i in idx]
-#
-##plt.figure()
-#plt.gca().invert_yaxis()
-#plt.xlabel('BP-RP')
-#plt.ylabel('G_abs')
-#
-#plt.plot(BPRP_sel,G_sel,'o', markersize=0.25)
-#
-#
-##%%
+#%% ESSENTIAL - plots HR diagram (and gets essential data for it )
+""" Plotting script for MWD HRD """
+# Selects WDs with reciprocal parallaxes/1000 < 100 --> says WDs must be x distance from us (or close to us?)
+
+dist_pc = np.reciprocal(parallax/1000)
+idx = np.where(dist_pc < 100)[0]
+
+dist_pc_constrained = [dist_pc[i] for i in idx]
+BPRP_sel = [BPRP[i] for i in idx]
+G_sel = [G_abs[i] for i in idx]
+
+#plt.figure()
+plt.gca().invert_yaxis()
+plt.xlabel('BP-RP')
+plt.ylabel('G_abs')
+
+plt.plot(BPRP_sel,G_sel,'o', markersize=0.25)
+
+
+#%%
 """ Reading in batches of files """
 
 column_names = ["Filename", "Class", "B alpha", "B error alpha", "lambda0", "lambda0 error", "begin", "finish", "start1", "end1", "start2", "end2", "start3", "end3", "Notes"]
@@ -147,7 +147,7 @@ for i in range(0,number_sections):
         subsections[i][j] = datafolder[j][intervals[i]:intervals[i+1]]
 
 
-##%% 
+#%% 
 number_sections = 11 # for class 1 this is only 6 (was 11 for generality but was empty lists past this point)
 intervals = [0]
 [intervals.append(intervals[i]+20) for i in range(0,number_sections)]
@@ -264,6 +264,9 @@ Gaia_data_216 = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Proj
 Gaia_data_216 = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\MSci Project\Catalogues\AlldataDA csv.csv', \
                         skiprows = 0)#, unpack = True)#names = columns)
 
+Gaia_data_216 = pd.read_csv(r'C:\Users\44743\Documents\Imperial Year 4\UROP Year 4\AlldataDA - UROP inc.csv', \
+                        skiprows = 0)#, unpack = True)#names = columns)
+
 ##%%
 ##plt.plot(np.array(Gaia_data['BPRP'].tolist()), np.array(Gaia_data['G_abs'].tolist()))
 #plt.plot(Gaia_data[3], Gaia_data[4], 'x')
@@ -289,7 +292,7 @@ mass_err = []
 bfield_err = []
 
 [mass.append(Gaia_data_216['Mass'][i]) for i in range(0, len(Gaia_data_216))]
-[bfield.append(Gaia_data_216['T_eff'][i]) for i in range(0, len(Gaia_data_216))]
+[bfield.append(Gaia_data_216['Bfield'][i]) for i in range(0, len(Gaia_data_216))]
 [mass_err.append(Gaia_data_216['eMass'][i]) for i in range(0, len(Gaia_data_216))]
 [bfield_err.append(Gaia_data_216['eT_eff'][i]) for i in range(0, len(Gaia_data_216))]
 
@@ -776,8 +779,14 @@ plt.show()
 x = np.random.normal(size=1000)
 y = x * 3 + np.random.normal(size=1000)
 
+bprp_216 = np.array(bprp_216)
+absG_216 = np.array(absG_216)
+
+bprp_216 = bprp_216[np.logical_not(np.isnan(absG_216))] # remove nans related to mass nans first
+absG_216 = absG_216[np.logical_not(np.isnan(absG_216))] # remove mass nans (cannot remove B nans after since mass nans now removed)
+
 x = np.array(bprp_216)
-y = np.array(absG_216)
+y = np.array(absG_216) # whatever is in x, y is the density plot part!
 # Calculate the point density
 xy = np.vstack([x,y])
 z = gaussian_kde(xy)(xy)
@@ -787,11 +796,11 @@ idx = z.argsort()
 x, y, z = x[idx], y[idx], z[idx]
 
 # HRD positions of 216 Wds
-bprp_216 = []
-absG_216 = []
-
-[bprp_216.append(Gaia_data_216['BPRP'][i]) for i in range(0, len(Gaia_data_216))]
-[absG_216.append(Gaia_data_216['G_abs'][i]) for i in range(0, len(Gaia_data_216))]
+#bprp_216 = []
+#absG_216 = []
+#
+#[bprp_216.append(Gaia_data_216['BPRP'][i]) for i in range(0, len(Gaia_data_216))]
+#[absG_216.append(Gaia_data_216['G_abs'][i]) for i in range(0, len(Gaia_data_216))]
 
 fig, ax = plt.subplots()
 #ax.scatter(BPRP_sel, G_sel, s = 1, color = 'darkgrey')
@@ -826,11 +835,56 @@ plt.show()
 
 #plt.savefig(f'HRDwithdensityMWDs.pdf', bbox_inches = 'tight')
 
+#%%
+""" HRD with colourbar for magnetic field (everything else no density) """
 
-#
-#
+import matplotlib.pyplot as plt
+cm = plt.cm.get_cmap('RdYlBu')
+#xy = range(20)
+#z = xy
+
+bprp_216 = []
+absG_216 = []
+
+[bprp_216.append(Gaia_data_216['BPRP'][i]) for i in range(0, len(Gaia_data_216))]
+[absG_216.append(Gaia_data_216['G_abs'][i]) for i in range(0, len(Gaia_data_216))]
+
+bprp_216 = np.array(bprp_216)
+absG_216 = np.array(absG_216)
+Bfieldlist = np.array(datalist[0])
+#Bfieldlist = np.array(bfield)
+Bfieldlist = Bfieldlist[np.logical_not(np.isnan(absG_216))]
+bprp_216 = bprp_216[np.logical_not(np.isnan(absG_216))] # remove nans related to mass nans first
+absG_216 = absG_216[np.logical_not(np.isnan(absG_216))] # remove mass nans (cannot remove B nans after since mass nans now removed)
+
+x = bprp_216
+y = absG_216
+z = Bfieldlist
+
+idx = z.argsort()
+x, y, z = x[idx], y[idx], z[idx]
+
+plt.figure()
 
 
+plt.xlim([np.amin(BPRP_sel)+0.2, np.amax(BPRP_sel)+0.05])
+plt.ylim([np.amin(G_sel), np.amax(G_sel)])
+
+plt.scatter(BPRP_sel, G_sel, alpha=1, s=0.5, color='grey', zorder=0) #s = 0.01 or 0.05 or somewhere between
+plt.scatter(x, y, s = 5)
+plt.gca().invert_yaxis()
+cmap = plt.cm.winter_r
+sc = plt.scatter(x, y, c= z, s=10, norm=colors.LogNorm(vmin=z.min(), vmax=z.max()), cmap=cmap) # vmin=0, vmax=20, 
+plt.colorbar(sc)
+
+plt.xlabel(r'$G_\mathrm{BP} - G_\mathrm{RP}$ (mag)')#, fontsize = '13')
+plt.ylabel(r'$G_\mathrm{abs}$ (mag)')#, fontsize = '13')
+#ax.tick_params(axis='both', labelsize=11)
+#cb.ax.tick_params(axis='both', labelsize=11)
+
+#plt.colorbar.set_label(r"$\mathrm{B field}$")#, fontsize = '13')
+
+plt.show()
 
 
 

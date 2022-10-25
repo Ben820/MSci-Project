@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Jan 24 18:09:09 2022
-
 @author: rr3
 """
 
@@ -16,13 +15,17 @@ import glob
 import pandas as pd 
 #%%
 """ Part 1: Load data
-
 Notes: data - MWD spectrum
        wavelength - x-values 
        flux - y-values
 """
 #load data and sort into appropriate variables
 filename = "DESI_WDJ224741.46+145638.84_bin0p2.dat"
+filename = "DESI_WDJ023420.63+264801.74_bin0p2.dat"
+filename = "DESI_WDJ012930.35+155106.95_bin0p2.dat"
+filename = "DESI_WDJ034513.72-111452.15_bin0p2.dat"
+
+
 data = np.genfromtxt(f'{filename}', delimiter=' ')
 
 wavelength = data[:,0]
@@ -30,52 +33,53 @@ flux = data[:,1]
 error = data[:,2]
 
 plt.figure()
-plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='',linewidth=1)
+plt.errorbar(wavelength,flux, yerr = error ,label = f"{filename}", fmt ='')#,linewidth=1)
 plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
 plt.ylabel("Flux", size = "15")
 
 #plt.xlim(3660, 9300)
-plt.ylim(0,140)
+#plt.ylim(0,140)
 plt.grid()
 plt.legend()
 plt.show()
-#%%
-scaled_flux = 330E6*norm_spectra
-#wavelength[:] = [(wavelength-100) for number in wavelength]
-plt.figure()
-plt.plot(masked_Ha_reg, scaled_flux, linewidth=1)
-
-plt.figure()
-plt.plot(wavelength_alpha_list[12],b_alpha_list[12],'--',linewidth=2.5)
-plt.plot(wavelength_alpha_list[11],b_alpha_list[11],'--',linewidth=2.5)
-plt.plot(wavelength_alpha_list[10],b_alpha_list[10],'--',linewidth=2.5)
-plt.plot(wavelength_alpha_list[7],b_alpha_list[7],'--',linewidth=2.5)
-plt.plot(wavelength_alpha_list[12],b_alpha_list[12],'x')
-plt.plot(wavelength_alpha_list[11],b_alpha_list[11],'x')
-plt.plot(wavelength_alpha_list[10],b_alpha_list[10],'x')
-plt.plot(wavelength_alpha_list[7],b_alpha_list[7],'x')
-plt.plot(wavelength_beta_list[15],b_beta_list[15],'--',linewidth=2.5)
-plt.plot(wavelength_beta_list[10],b_beta_list[10],'--',linewidth=2.5)
-plt.plot(wavelength_beta_list[15],b_beta_list[15],'x')
-plt.plot(wavelength_beta_list[10],b_beta_list[10],'x')
-plt.plot(masked_Ha_reg, scaled_flux, linewidth=1,color='darkblue')
+##%%
+#scaled_flux = 330E6*norm_spectra
+##wavelength[:] = [(wavelength-100) for number in wavelength]
+#plt.figure()
+#plt.plot(masked_Ha_reg, scaled_flux, linewidth=1)
+#
+#plt.figure()
+#plt.plot(wavelength_alpha_list[12],b_alpha_list[12],'--',linewidth=2.5)
+#plt.plot(wavelength_alpha_list[11],b_alpha_list[11],'--',linewidth=2.5)
+#plt.plot(wavelength_alpha_list[10],b_alpha_list[10],'--',linewidth=2.5)
+#plt.plot(wavelength_alpha_list[7],b_alpha_list[7],'--',linewidth=2.5)
+#plt.plot(wavelength_alpha_list[12],b_alpha_list[12],'x')
+#plt.plot(wavelength_alpha_list[11],b_alpha_list[11],'x')
+#plt.plot(wavelength_alpha_list[10],b_alpha_list[10],'x')
+#plt.plot(wavelength_alpha_list[7],b_alpha_list[7],'x')
+#plt.plot(wavelength_beta_list[15],b_beta_list[15],'--',linewidth=2.5)
+#plt.plot(wavelength_beta_list[10],b_beta_list[10],'--',linewidth=2.5)
+#plt.plot(wavelength_beta_list[15],b_beta_list[15],'x')
+#plt.plot(wavelength_beta_list[10],b_beta_list[10],'x')
+#plt.plot(masked_Ha_reg, scaled_flux, linewidth=1,color='darkblue')
 
 #%%
 """ Part 2: Performs cuts on the data to isolate the H-alpha region
-
 Notes: start/start_Ha - beginning of cut
        last/last_Ha - end of cut 
        masked_Ha_flux - y-values included within the cut
        Gauss_Ha_reg - x-values included within the cut
-
 begin/ finish define the whole region including the triplet feature 
 startx/endx define the specific region to be cut out (the absorption feature) """
 
-begin_cut = 3800
-finish_cut = 4380
+begin_cut = 6650
+finish_cut = 7250
 
-start_Gauss = 4110
-end_Gauss = 4190
+start_Gauss = 6800
+end_Gauss = 7065
+
+p0_Gauss = [6900,50,3] # p0 for Gaussian 
+
 
 start_cut = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-begin_cut)))[0])
 end_cut = int(np.where(wavelength == min(wavelength, key=lambda x:abs(x-finish_cut)))[0])
@@ -151,24 +155,23 @@ Gauss_spectra = Gauss_Ha_flux/Continuum
 # plt.legend()
 # plt.show()
 # =============================================================================
-#%%
+##%%
 # =============================================================================
 # plt.figure()
 # plt.grid()
 # plt.plot(masked_wavelength,masked_flux)
 # =============================================================================
-#%%
+##%%
 # =============================================================================
-# plt.figure()
-# plt.plot(Gauss_Ha_reg, Gauss_spectra, label = f"{filename}") #plot the normalised spectrum
-# plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
-# plt.ylabel("Normalised Flux", size = "15")
-# plt.legend()
-# plt.show()
+#plt.figure()
+#plt.plot(Gauss_Ha_reg, Gauss_spectra, label = f"{filename}") #plot the normalised spectrum
+#plt.xlabel("Wavelength $\lambda$, $[\AA]$" , size = "15")
+#plt.ylabel("Normalised Flux", size = "15")
+#plt.legend()
+#plt.show()
 # =============================================================================
-#%%
+##%%
 """ Gaussian Profile 
-
 Notes: 
 """
 xp_feature = []
@@ -187,16 +190,24 @@ def Gaussian(x,mu,sig,A):
     gaus = (-(A)*((1/np.sqrt((2*sp.pi)*sig))*(sp.exp(-(x-mu)**2/(2*sig**2)))))+1
     return gaus
 
-p0 = [4135,100,3]
+#p0 = [7454,100,3]
+#p0 = [6980,100,3] # p0 for Gaussian 
 
 
-popt_Gauss, cov_Gauss = opt.curve_fit(Gaussian, xp_feature, yp_feature, p0, sigma = err_feature)
+popt_Gauss, cov_Gauss = opt.curve_fit(Gaussian, xp_feature, yp_feature, p0_Gauss, sigma = err_feature)
 
 for c in zip(popt_Gauss, np.sqrt(np.diag(cov_Gauss))):
     print("%.8f pm %.3g" % (c[0], c[1]))
-#%%
+##%%
 plt.figure()
 plt.grid()
 plt.plot(xp_feature,yp_feature)
 plt.plot(xp_feature,Gaussian(xp_feature,*popt_Gauss))
-    
+plt.show()
+##%%
+G_array = [popt_Gauss[0],popt_Gauss[1],popt_Gauss[2]]
+print(G_array)
+
+
+
+
